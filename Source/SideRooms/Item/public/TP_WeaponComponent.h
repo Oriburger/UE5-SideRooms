@@ -50,8 +50,8 @@ public:
 		class UInputAction* ReloadAction;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-		TArray<AActor*> GetBulletHitResult();
+	UFUNCTION()
+		TArray<FHitResult> GetBulletHitResult();
 
 //===== Asset =============================
 public:

@@ -5,9 +5,12 @@
 #include "../../Character/public/SideRoomsCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+#define TRACE_LIMIT_DISTANCE 50000.0f
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -23,11 +26,11 @@ void UTP_WeaponComponent::Fire()
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
 	UE_LOG(LogTemp, Warning, TEXT("Fire #2"));
 
-	TArray<AActor*> targetList = GetBulletHitResult();
-	for (AActor* target : targetList)
+	TArray<FHitResult> targetList = GetBulletHitResult();
+	for (FHitResult& target : targetList)
 	{
-		if (!IsValid(target)) continue;
-		UGameplayStatics::ApplyDamage(target, 1.0f, nullptr, CharacterRef.Get(), nullptr);
+		if (!IsValid(target.GetActor())) continue;
+		UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
 	}
 
 	// 2024/01/09 LJH
@@ -49,6 +52,24 @@ void UTP_WeaponComponent::Fire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+}
+
+TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
+{
+	if (GetSkinnedAsset()->FindSocket(FName("Muzzle")) == nullptr) return {};
+	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return {};
+
+	//try trace by multi channel muzzle location to camera inf location 
+	const FVector& beginLocation = GetSocketLocation(FName("Muzzle"));
+	const FVector& endLocation = (CharacterRef.Get()->FirstPersonCameraComponent->GetComponentLocation())
+		+ CharacterRef.Get()->FirstPersonCameraComponent->GetComponentRotation().Vector() * TRACE_LIMIT_DISTANCE;
+	
+	//only trace on world dynamic, pawn
+	TArray<FHitResult> hitResult;
+	UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), beginLocation, endLocation
+		, { (EObjectTypeQuery)ECC_WorldDynamic, (EObjectTypeQuery)ECC_Pawn }, false, {GetOwner()}
+		, EDrawDebugTrace::Type::ForDuration, hitResult, true);
+	return hitResult;
 }
 
 void UTP_WeaponComponent::AttachWeapon(ASideRoomsCharacter* TargetCharacter)
