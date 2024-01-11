@@ -49,6 +49,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ReloadAction;
 
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+		TArray<AActor*> GetBulletHitResult();
+
 //===== Asset =============================
 public:
 	/** Sound to play each time we fire */
@@ -67,4 +71,8 @@ public:
 private:
 	/** The Character holding this weapon*/
 	TWeakObjectPtr<ASideRoomsCharacter> CharacterRef;
+
+protected:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		ASideRoomsCharacter* GetCharacterRef() { return CharacterRef.Get(); }
 };

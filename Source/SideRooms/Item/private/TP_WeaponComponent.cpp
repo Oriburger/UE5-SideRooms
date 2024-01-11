@@ -19,12 +19,17 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 
 void UTP_WeaponComponent::Fire()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Fire #1"));
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
+	UE_LOG(LogTemp, Warning, TEXT("Fire #2"));
 
-	// Try and fire a projectile
-	// {
-	//	  Simulate bullet shoot with linetrace
-	// }
+	TArray<AActor*> targetList = GetBulletHitResult();
+	for (AActor* target : targetList)
+	{
+		if (!IsValid(target)) continue;
+		UGameplayStatics::ApplyDamage(target, 1.0f, nullptr, CharacterRef.Get(), nullptr);
+	}
+
 	// 2024/01/09 LJH
 	GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("Fire!"));
 	
