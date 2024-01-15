@@ -2,7 +2,7 @@
 
 
 #include "../public/TP_WeaponComponent.h"
-#include "../../Character/public/SideRoomsCharacter.h"
+#include "../../Character/public/MainCharacterBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraComponent.h"
@@ -46,7 +46,7 @@ void UTP_WeaponComponent::Fire()
 	if (FireAnimation != nullptr)
 	{
 		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = CharacterRef.Get()->Mesh1P->GetAnimInstance();
+		UAnimInstance* AnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
@@ -72,17 +72,18 @@ TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 	return hitResult;
 }
 
-void UTP_WeaponComponent::AttachWeapon(ASideRoomsCharacter* TargetCharacter)
+void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 {
 	CharacterRef = TargetCharacter;
 	if (!CharacterRef.IsValid()) return;
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(CharacterRef.Get()->Mesh1P, AttachmentRules, FName(TEXT("GripPoint")));
-	
+	AttachToComponent(CharacterRef.Get()->FirstPersonMesh, AttachmentRules, FName(TEXT("GripPoint")));
+
 	// switch bHasRifle so the animation blueprint can switch to another animation set
 	CharacterRef.Get()->SetHasRifle(true);
+	UE_LOG(LogTemp, Warning, TEXT("Has Rifle!"));
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(CharacterRef.Get()->GetController()))
