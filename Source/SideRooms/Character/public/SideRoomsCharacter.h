@@ -7,6 +7,19 @@
 #include "InputActionValue.h"
 #include "SideRoomsCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class ECharacterState : uint8
+{
+	E_IDLE		UMETA(DisplayName = "Idle"),
+	E_WALK		UMETA(DisplayName = "Walk"),
+	E_ATTACK	UMETA(DisplayName = "Attack"),
+	E_SPRINT	UMETA(DisplayName = "Sprint"),
+	E_JUMP		UMETA(DisplayName = "Jump"),
+	E_CROUCH	UMETA(DisplayName = "Crouch"),
+	E_HIT		UMETA(DisplayName = "Hit"),
+	E_DEAD		UMETA(DisplayName = "Dead"),
+};
+
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
