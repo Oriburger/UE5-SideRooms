@@ -2,12 +2,15 @@
 
 
 #include "../public/TP_WeaponComponent.h"
-#include "../../Character/public/SideRoomsCharacter.h"
+#include "../../Character/public/MainCharacterBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+#define TRACE_LIMIT_DISTANCE 50000.0f
 
 // Sets default values for this component's properties
 UTP_WeaponComponent::UTP_WeaponComponent()
@@ -19,12 +22,17 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 
 void UTP_WeaponComponent::Fire()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Fire #1"));
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
+	UE_LOG(LogTemp, Warning, TEXT("Fire #2"));
 
-	// Try and fire a projectile
-	// {
-	//	  Simulate bullet shoot with linetrace
-	// }
+	TArray<FHitResult> targetList = GetBulletHitResult();
+	for (FHitResult& target : targetList)
+	{
+		if (!IsValid(target.GetActor())) continue;
+		UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
+	}
+
 	// 2024/01/09 LJH
 	GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("Fire!"));
 	
@@ -38,7 +46,7 @@ void UTP_WeaponComponent::Fire()
 	if (FireAnimation != nullptr)
 	{
 		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = CharacterRef.Get()->Mesh1P->GetAnimInstance();
+		UAnimInstance* AnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
@@ -46,17 +54,36 @@ void UTP_WeaponComponent::Fire()
 	}
 }
 
-void UTP_WeaponComponent::AttachWeapon(ASideRoomsCharacter* TargetCharacter)
+TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
+{
+	if (GetSkinnedAsset()->FindSocket(FName("Muzzle")) == nullptr) return {};
+	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return {};
+
+	//try trace by multi channel muzzle location to camera inf location 
+	const FVector& beginLocation = GetSocketLocation(FName("Muzzle"));
+	const FVector& endLocation = (CharacterRef.Get()->FirstPersonCameraComponent->GetComponentLocation())
+		+ CharacterRef.Get()->FirstPersonCameraComponent->GetComponentRotation().Vector() * TRACE_LIMIT_DISTANCE;
+	
+	//only trace on world dynamic, pawn
+	TArray<FHitResult> hitResult;
+	UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), beginLocation, endLocation
+		, { (EObjectTypeQuery)ECC_WorldDynamic, (EObjectTypeQuery)ECC_Pawn }, false, {GetOwner()}
+		, EDrawDebugTrace::Type::ForDuration, hitResult, true);
+	return hitResult;
+}
+
+void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 {
 	CharacterRef = TargetCharacter;
 	if (!CharacterRef.IsValid()) return;
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(CharacterRef.Get()->Mesh1P, AttachmentRules, FName(TEXT("GripPoint")));
-	
+	AttachToComponent(CharacterRef.Get()->FirstPersonMesh, AttachmentRules, FName(TEXT("GripPoint")));
+
 	// switch bHasRifle so the animation blueprint can switch to another animation set
 	CharacterRef.Get()->SetHasRifle(true);
+	UE_LOG(LogTemp, Warning, TEXT("Has Rifle!"));
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(CharacterRef.Get()->GetController()))

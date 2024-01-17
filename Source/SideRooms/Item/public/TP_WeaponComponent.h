@@ -6,7 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "TP_WeaponComponent.generated.h"
 
-class ASideRoomsCharacter;
+class AMainCharacterBase;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SIDEROOMS_API UTP_WeaponComponent : public USkeletalMeshComponent
@@ -27,7 +27,7 @@ protected:
 public:
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		void AttachWeapon(ASideRoomsCharacter* TargetCharacter);
+		void AttachWeapon(AMainCharacterBase* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -49,6 +49,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ReloadAction;
 
+protected:
+	UFUNCTION()
+		TArray<FHitResult> GetBulletHitResult();
+
 //===== Asset =============================
 public:
 	/** Sound to play each time we fire */
@@ -66,5 +70,9 @@ public:
 //===== Etc =============================
 private:
 	/** The Character holding this weapon*/
-	TWeakObjectPtr<ASideRoomsCharacter> CharacterRef;
+	TWeakObjectPtr<AMainCharacterBase> CharacterRef;
+
+protected:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		AMainCharacterBase* GetCharacterRef() { return CharacterRef.Get(); }
 };
