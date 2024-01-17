@@ -19,13 +19,25 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
 
+void UTP_WeaponComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentClipSize = MaxClipSize; 
+}
 
 void UTP_WeaponComponent::Fire()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Fire #1"));
+	//Check Validity
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
-	UE_LOG(LogTemp, Warning, TEXT("Fire #2"));
 
+	//Check Property Condition 
+	if (!bCanFire || bIsReloading || CurrentClipSize <= 0) return;
+
+	//Update Current ClipSize
+	CurrentClipSize -= 1;
+
+	//Hit Scan & Damage Logic
 	TArray<FHitResult> targetList = GetBulletHitResult();
 	for (FHitResult& target : targetList)
 	{
@@ -33,15 +45,12 @@ void UTP_WeaponComponent::Fire()
 		UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
 	}
 
-	// 2024/01/09 LJH
-	GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("Fire!"));
-	
 	// Try and play the sound if specified
 	if (FireSound != nullptr)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, CharacterRef.Get()->GetActorLocation());
 	}
-	
+
 	// Try and play a firing animation if specified
 	if (FireAnimation != nullptr)
 	{
@@ -52,6 +61,56 @@ void UTP_WeaponComponent::Fire()
 			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
+	
+	//Auto Fire / Reload Condition
+	if (CurrentClipSize == 0)
+	{
+		Reload();
+	}
+	else
+	{
+		bCanFire = false;
+
+		//Set Resetting bCanFire Event And  Auto Fire Event
+		GetWorld()->GetTimerManager().SetTimer(AutoFireHandle, FTimerDelegate::CreateLambda([&]()
+			{
+				bCanFire = true;
+				if (bIsAutomatic)
+				{
+					Fire();
+				}
+			}), FireRate, false);	// 반복하려면 false를 true로 변경
+	}
+}
+
+void UTP_WeaponComponent::Reload()
+{
+	//Check Property Condition 
+	if (bIsReloading || CurrentAmmo <= 0) return;
+
+	//Set Property Condition
+	bIsReloading = true; 
+	bCanFire = false;
+
+	//ReloadAnimation 
+	//~
+
+	//ReloadEffect 
+	//~
+	
+	GetWorld()->GetTimerManager().SetTimer(ReloadDelayHandle, FTimerDelegate::CreateLambda([&]()
+		{
+			//Update Ammo Info
+			const int32 needAmmo = MaxClipSize - CurrentClipSize;
+			const int32 addAmmo = FMath::Min(needAmmo, CurrentAmmo);
+			CurrentAmmo -= addAmmo;
+			CurrentClipSize += addAmmo;
+
+			//Update Property Condition
+			bCanFire = true;
+			bIsReloading = false;
+
+		}), ReloadSpeed, false);	// 반복하려면 false를 true로 변경
 }
 
 TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
@@ -83,7 +142,10 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 
 	// switch bHasRifle so the animation blueprint can switch to another animation set
 	CharacterRef.Get()->SetHasRifle(true);
-	UE_LOG(LogTemp, Warning, TEXT("Has Rifle!"));
+	if (CharacterRef.Get()->GetClass() == UTP_WeaponComponent::StaticClass())
+	{
+		Cast<AMainCharacterBase>(CharacterRef.Get())->WeaponRef = this;
+	}
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(CharacterRef.Get()->GetController()))
