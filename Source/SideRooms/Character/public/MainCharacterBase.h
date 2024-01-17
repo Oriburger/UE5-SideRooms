@@ -149,5 +149,9 @@ public:
 	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Weapon)
 		bool GetHasRifle();
+	
+	//Temp Value
+	UPROPERTY(BlueprintReadOnly)
+		class UTP_WeaponComponent* WeaponRef;
 };
 

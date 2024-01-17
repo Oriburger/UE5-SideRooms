@@ -46,4 +46,3 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		int32 GetMaxHP() { return CharacterMaxHP; }
 };
-

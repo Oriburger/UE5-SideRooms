@@ -19,6 +19,9 @@ public:
 	UTP_WeaponComponent();
 
 protected:
+	UFUNCTION()
+		virtual void BeginPlay() override;
+
 	/** Ends gameplay for this component. */
 	UFUNCTION()
 		virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -34,7 +37,7 @@ public:
 		void Fire();
 
 	/** Make the weapon  */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Weapon")
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void Reload();
 
 	/** MappingContext */
@@ -67,15 +70,69 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		FVector MuzzleOffset;
 
-//===== Stat =============================
+//===== Stat / State =============================
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
+		int32 MaxClipSize;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
+		int32 MaxAmmoCount;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
+		float FireRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
+		float ReloadSpeed;
+
+private:
+	int32 CurrentClipSize;
+
+	int32 CurrentAmmo;
+
+	bool bIsAutomatic = false;
+
+	bool bCanFire = true;
+	
+	bool bIsReloading = false;
+
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetCurrentClipSize() { return CurrentClipSize; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetMaxClipSize() { return MaxClipSize; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetCurrentAmmo() { return CurrentAmmo; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetMaxAmmo() { return MaxAmmoCount; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetIsAutomatic() { return bIsAutomatic; }
+
+	UFUNCTION(BlueprintCallable)
+		void SetIsAutomatic(bool NewState) { bIsAutomatic = NewState; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetCanFire() { return bCanFire; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetIsReloading() { return bIsReloading; }
 
 //===== Etc =============================
 private:
 	/** The Character holding this weapon*/
 	TWeakObjectPtr<AMainCharacterBase> CharacterRef;
 
-protected:
+protected:	
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		AMainCharacterBase* GetCharacterRef() { return CharacterRef.Get(); }
+
+	UPROPERTY(BlueprintReadOnly)
+		FTimerHandle AutoFireHandle;
+	
+	UPROPERTY(BlueprintReadOnly)
+		FTimerHandle ReloadDelayHandle;
+
 };
