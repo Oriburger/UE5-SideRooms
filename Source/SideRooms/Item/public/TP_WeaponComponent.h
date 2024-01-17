@@ -67,6 +67,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		FVector MuzzleOffset;
 
+//===== Stat =============================
+
+
 //===== Etc =============================
 private:
 	/** The Character holding this weapon*/

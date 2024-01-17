@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "../public/SideRoomsGameMode.h"
-#include "../../Character/public/SideRoomsCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 ASideRoomsGameMode::ASideRoomsGameMode()

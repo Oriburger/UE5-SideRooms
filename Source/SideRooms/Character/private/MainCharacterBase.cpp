@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,6 +36,8 @@ AMainCharacterBase::AMainCharacterBase()
 	FirstPersonMesh->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	FirstPersonMesh->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void AMainCharacterBase::BeginPlay()
@@ -48,6 +51,34 @@ void AMainCharacterBase::BeginPlay()
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+}
+
+
+void AMainCharacterBase::Tick(float DeltaSeconds)
+{
+	// Call the base class
+	Super::Tick(DeltaSeconds);
+
+	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= 100)
+	{
+		if (StaminaFlag == 1)
+			CharacterCurrentStamina += StaminaIncreaseval;
+		else
+			CharacterCurrentStamina += StaminaFlag * StaminaReduceVal;
+	}
+	else
+	{
+		if (CharacterCurrentStamina <= 0)
+		{
+			CharacterCurrentStamina = 0;
+			StaminaFlag = 1;
+		}
+		else
+		{
+			CharacterCurrentStamina = 100;
+			StaminaFlag = 0;
 		}
 	}
 }
@@ -68,9 +99,17 @@ void AMainCharacterBase::SetupPlayerInputComponent(class UInputComponent* Player
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::Look);
+
+		////Sprinting
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AMainCharacterBase::Sprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::Sprinting);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopSprinting);
+
+		//Crouching
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::StartCrouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopCrouch);
 	}
 }
-
 
 void AMainCharacterBase::Move(const FInputActionValue& Value)
 {
@@ -88,6 +127,47 @@ void AMainCharacterBase::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AMainCharacterBase::Sprint(const FInputActionValue& Value)
+{
+	if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero()) return;
+	if (bIsCrouched) return;
+
+	GetCharacterMovement()->MaxWalkSpeed *= SprintMultipleVal;
+	StaminaFlag = -1;
+	FirstPersonCameraComponent->SetFieldOfView(100);
+}
+
+void AMainCharacterBase::Sprinting(const FInputActionValue& Value)
+{
+	if (CharacterCurrentStamina <= 0 || bIsCrouched || GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero())
+	{
+		StopSprinting(Value);
+		return;
+	}
+}
+
+void AMainCharacterBase::StopSprinting(const FInputActionValue& Value)
+{
+	if (StaminaFlag == -1)
+	{
+		GetCharacterMovement()->MaxWalkSpeed /= SprintMultipleVal;
+		StaminaFlag = 1;
+		FirstPersonCameraComponent->SetFieldOfView(90);
+	}
+}
+
+void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Crouch"));
+	Super::Crouch();
+}
+
+void AMainCharacterBase::StopCrouch(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stop Crouch"));
+	Super::UnCrouch();
 }
 
 void AMainCharacterBase::SetHasRifle(bool bNewHasRifle)

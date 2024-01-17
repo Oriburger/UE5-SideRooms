@@ -29,9 +29,21 @@ protected:
 	/** Called for movement input */
 	virtual void Move(const FInputActionValue& Value);
 
+//====CharacterStat, CharacterState============
+protected:
+	/** Character HP **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Stat")
+		int32 CharacterMaxHP;
+
+private:
+	//** Character HP **/
+	int32 CharacterCurrHP;
 
 public:
-	//CharacterStat
-	//CharacterState
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetCurrentHP() { return CharacterCurrHP; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetMaxHP() { return CharacterMaxHP; }
 };
 

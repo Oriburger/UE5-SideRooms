@@ -15,6 +15,20 @@ class UCameraComponent;
 class UAnimMontage;
 class USoundBase;
 
+UENUM(BlueprintType)
+enum class ECharacterState : uint8
+{
+	E_IDLE		UMETA(DisplayName = "Idle"),
+	E_WALK		UMETA(DisplayName = "Walk"),
+	E_ATTACK	UMETA(DisplayName = "Attack"),
+	E_SPRINT	UMETA(DisplayName = "Sprint"),
+	E_JUMP		UMETA(DisplayName = "Jump"),
+	E_CROUCH	UMETA(DisplayName = "Crouch"),
+	E_HIT		UMETA(DisplayName = "Hit"),
+	E_DEAD		UMETA(DisplayName = "Dead"),
+};
+
+
 UCLASS(config=Game)
 class AMainCharacterBase : public ACharacterBase
 {
@@ -25,6 +39,8 @@ public:
 
 protected:
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaSeconds) override;
 
 //======== Component S
 public:
@@ -56,6 +72,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* SprintAction;
+
+	/** Crouch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* CrouchAction;
+
 protected:
 	/** Called for movement input */
 	virtual void Move(const FInputActionValue& Value) override;
@@ -63,24 +86,68 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	/** Called for starting sprint input */
+	void Sprint(const FInputActionValue& Value);
+
+	/** Called for sprinting input */
+	void Sprinting(const FInputActionValue& Value);
+
+	/** Called for stop sprinting input */
+	void StopSprinting(const FInputActionValue& Value);
+
+	/** Called for crouching input */
+	void StartCrouch(const FInputActionValue& Value);
+	
+	/** Called for stop sprinting input */
+	void StopCrouch(const FInputActionValue& Value);
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
 
+//======= Stats ====================================
+protected:
+	/** Character MaxStamina */
+	UPROPERTY(EditAnywhere, Category = "Gameplay|Stat")
+		float CharacterMaxStamina;
+
+	/** Character Sprint speed */
+	UPROPERTY(EditAnywhere, Category = "Gameplay|Stat")
+		float SprintMultipleVal;
+
+private:
+	/** Character Stamina **/
+	float CharacterCurrentStamina;
+
+	/** Flag for Stamina Control */
+	int StaminaFlag;
+
+	/**Stamina Recovery Value */
+	float StaminaIncreaseval;
+
+	/**Stamina Consuming Value */
+	float StaminaReduceVal;
+
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		float GetCurrentStamina() { return CharacterCurrentStamina; }
+		
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		float GetMaxStamina() { return CharacterMaxStamina; }
 
 //======= Pickup ====================================
-public:
+private:
 	/** Bool for AnimBP to switch to another animation set */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
-		bool bHasRifle;
+	bool bHasRifle;
 
+public:
 	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 		void SetHasRifle(bool bNewHasRifle);
 
 	/** Getter for the bool */
-	UFUNCTION(BlueprintCallable, Category = Weapon)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Weapon)
 		bool GetHasRifle();
 };
 
