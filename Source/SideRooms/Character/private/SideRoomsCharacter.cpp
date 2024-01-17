@@ -85,10 +85,15 @@ void ASideRoomsCharacter::Tick(float DeltaSeconds)
 	else
 	{
 		if (CharacterStamina <= 0)
+		{
 			CharacterStamina = 0;
+			StaminaFlag = 1;
+		}
 		else
+		{
 			CharacterStamina = 100;
-		StaminaFlag = 1;
+			StaminaFlag = 0;
+		}
 	}
 }
 
