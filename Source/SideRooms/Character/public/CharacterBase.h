@@ -29,17 +29,30 @@ protected:
 	/** Called for movement input */
 	virtual void Move(const FInputActionValue& Value);
 
+	virtual void Sprint(const FInputActionValue& Value);
+
+	virtual void StopSprint(const FInputActionValue& Value);
+
 //====CharacterStat, CharacterState============
 protected:
-	/** Character HP **/
+	/** Character Max HP **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Stat")
 		int32 CharacterMaxHP;
 
-private:
-	//** Character HP **/
+	/** Character Sprint speed */
+	UPROPERTY(EditAnywhere, Category = "Gameplay|Stat")
+		float SprintMultipleVal;
+
+	/** Character Curr HP */
 	int32 CharacterCurrHP;
 
+	/** Character  */
+	bool bIsSprinting = false;
+
 public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetIsSprinting() { return bIsSprinting; }
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		int32 GetCurrentHP() { return CharacterCurrHP; }
 

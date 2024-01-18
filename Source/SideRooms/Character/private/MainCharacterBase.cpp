@@ -15,6 +15,12 @@
 
 AMainCharacterBase::AMainCharacterBase()
 {
+	// Initialize Character Stamina State
+	CharacterCurrentStamina = CharacterMaxStamina;
+	StaminaFlag = 0;
+	StaminaIncreaseval = 0.1f;
+	StaminaReduceVal = 0.2f;
+
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
 
@@ -61,8 +67,11 @@ void AMainCharacterBase::Tick(float DeltaSeconds)
 	// Call the base class
 	Super::Tick(DeltaSeconds);
 
-	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= 100)
+	UE_LOG(LogTemp, Warning, TEXT("Tick#1 %d"));
+
+	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= CharacterMaxStamina)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Tick#2"));
 		if (StaminaFlag == 1)
 			CharacterCurrentStamina += StaminaIncreaseval;
 		else
@@ -102,9 +111,9 @@ void AMainCharacterBase::SetupPlayerInputComponent(class UInputComponent* Player
 
 		////Sprinting
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AMainCharacterBase::Sprint);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::Sprinting);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopSprinting);
-
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::CheckStopSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopSprint);
+		
 		//Crouching
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::StartCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopCrouch);
@@ -131,28 +140,32 @@ void AMainCharacterBase::Look(const FInputActionValue& Value)
 
 void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 {
-	if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero()) return;
-	if (bIsCrouched) return;
-
-	GetCharacterMovement()->MaxWalkSpeed *= SprintMultipleVal;
+	UE_LOG(LogTemp, Warning, TEXT("Sprint#1"));
+	if (GetIsSprinting()) return;
+	UE_LOG(LogTemp, Warning, TEXT("Sprint#2"));
+	Super::Sprint(Value);
 	StaminaFlag = -1;
 	FirstPersonCameraComponent->SetFieldOfView(100);
 }
 
-void AMainCharacterBase::Sprinting(const FInputActionValue& Value)
+void AMainCharacterBase::CheckStopSprint(const FInputActionValue& Value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Check Stop Sprint #1"));
 	if (CharacterCurrentStamina <= 0 || bIsCrouched || GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero())
 	{
-		StopSprinting(Value);
+		UE_LOG(LogTemp, Warning, TEXT("Check Stop Sprint #2"));
+		StopSprint(Value);
 		return;
 	}
 }
 
-void AMainCharacterBase::StopSprinting(const FInputActionValue& Value)
+void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Stop Sprint #1"));
 	if (StaminaFlag == -1)
 	{
-		GetCharacterMovement()->MaxWalkSpeed /= SprintMultipleVal;
+		UE_LOG(LogTemp, Warning, TEXT("Stop Sprint #2"));
+		Super::StopSprint(Value);
 		StaminaFlag = 1;
 		FirstPersonCameraComponent->SetFieldOfView(90);
 	}
