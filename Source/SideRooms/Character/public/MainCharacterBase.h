@@ -86,14 +86,14 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	/** Called for starting sprint input */
+	/** Called for sprinting input */
 	void Sprint(const FInputActionValue& Value);
 
 	/** Called for sprinting input */
-	void Sprinting(const FInputActionValue& Value);
+	void CheckStopSprint(const FInputActionValue& Value);
 
 	/** Called for stop sprinting input */
-	void StopSprinting(const FInputActionValue& Value);
+	void StopSprint(const FInputActionValue& Value);
 
 	/** Called for crouching input */
 	void StartCrouch(const FInputActionValue& Value);
@@ -111,10 +111,6 @@ protected:
 	/** Character MaxStamina */
 	UPROPERTY(EditAnywhere, Category = "Gameplay|Stat")
 		float CharacterMaxStamina;
-
-	/** Character Sprint speed */
-	UPROPERTY(EditAnywhere, Category = "Gameplay|Stat")
-		float SprintMultipleVal;
 
 private:
 	/** Character Stamina **/
@@ -150,7 +146,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = Weapon)
 		bool GetHasRifle();
 	
-	//Temp Value
+	/** Temp Value */
 	UPROPERTY(BlueprintReadOnly)
 		class UTP_WeaponComponent* WeaponRef;
 };
