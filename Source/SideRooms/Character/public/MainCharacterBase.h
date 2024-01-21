@@ -42,7 +42,7 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-//======== Component S
+//======== Component ==========================
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Mesh)
 		USkeletalMeshComponent* FirstPersonMesh;

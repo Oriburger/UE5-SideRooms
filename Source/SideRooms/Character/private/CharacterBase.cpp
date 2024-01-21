@@ -45,8 +45,6 @@ void ACharacterBase::Sprint(const FInputActionValue& Value)
 	if (bIsSprinting) return;
 	if (GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero()) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Sprint#3"));
-
 	bIsSprinting = true;
 	GetCharacterMovement()->MaxWalkSpeed *= SprintMultipleVal;
 }
@@ -55,8 +53,6 @@ void ACharacterBase::StopSprint(const FInputActionValue& Value)
 {
 	if (!bIsSprinting) return;
 	
-	UE_LOG(LogTemp, Warning, TEXT("Stop Sprint #4"));
-
 	bIsSprinting = false;
 	GetCharacterMovement()->MaxWalkSpeed /= SprintMultipleVal;
 }

@@ -15,6 +15,8 @@
 
 AMainCharacterBase::AMainCharacterBase()
 {
+	Tags.Add("Player");
+
 	// Initialize Character Stamina State
 	CharacterCurrentStamina = CharacterMaxStamina;
 	StaminaFlag = 0;
@@ -67,11 +69,8 @@ void AMainCharacterBase::Tick(float DeltaSeconds)
 	// Call the base class
 	Super::Tick(DeltaSeconds);
 
-	UE_LOG(LogTemp, Warning, TEXT("Tick#1 %d"));
-
 	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= CharacterMaxStamina)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Tick#2"));
 		if (StaminaFlag == 1)
 			CharacterCurrentStamina += StaminaIncreaseval;
 		else
@@ -140,9 +139,7 @@ void AMainCharacterBase::Look(const FInputActionValue& Value)
 
 void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Sprint#1"));
 	if (GetIsSprinting()) return;
-	UE_LOG(LogTemp, Warning, TEXT("Sprint#2"));
 	Super::Sprint(Value);
 	StaminaFlag = -1;
 	FirstPersonCameraComponent->SetFieldOfView(100);
@@ -150,10 +147,8 @@ void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 
 void AMainCharacterBase::CheckStopSprint(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Check Stop Sprint #1"));
 	if (CharacterCurrentStamina <= 0 || bIsCrouched || GetCharacterMovement()->GetCurrentAcceleration().IsNearlyZero())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Check Stop Sprint #2"));
 		StopSprint(Value);
 		return;
 	}
@@ -161,10 +156,8 @@ void AMainCharacterBase::CheckStopSprint(const FInputActionValue& Value)
 
 void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Sprint #1"));
 	if (StaminaFlag == -1)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Stop Sprint #2"));
 		Super::StopSprint(Value);
 		StaminaFlag = 1;
 		FirstPersonCameraComponent->SetFieldOfView(90);
