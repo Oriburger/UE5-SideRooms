@@ -17,6 +17,14 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
+
+	ScopeComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Scope"));
+	ScopeComponent->SetupAttachment(this, "SOCKET_Default");
+	ScopeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	MagazineComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Magazine"));
+	MagazineComponent->SetupAttachment(this, "SOCKET_Magazine");
+	MagazineComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void UTP_WeaponComponent::BeginPlay()
@@ -24,6 +32,14 @@ void UTP_WeaponComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentClipSize = MaxClipSize; 
+	if (ScopeComponent != nullptr && MagazineComponent != nullptr)
+	{
+		ScopeComponent->SetStaticMesh(ScopeMesh);
+		MagazineComponent->SetStaticMesh(MagazineMesh);
+
+		ScopeComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, TEXT("SOCKET_Default"));
+		MagazineComponent->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform, TEXT("SOCKET_Magazine"));
+	}
 }
 
 void UTP_WeaponComponent::Fire()
@@ -41,26 +57,17 @@ void UTP_WeaponComponent::Fire()
 	TArray<FHitResult> targetList = GetBulletHitResult();
 	for (FHitResult& target : targetList)
 	{
-		if (!IsValid(target.GetActor())) continue;
-		UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
+		if (DefaultDecal != nullptr)
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecal, FVector(10.0f), target.Location, GetComponentRotation(), 0.0f);
+		if (IsValid(target.GetActor()))
+			UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
 	}
 
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, CharacterRef.Get()->GetActorLocation());
-	}
+	// Simulate Recoil
+	SimulateRecoil();
 
 	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
+	PlayAnimMontage(FireAnimation, CharacterFireAnimation);
 	
 	//Auto Fire / Reload Condition
 	if (CurrentClipSize == 0)
@@ -86,15 +93,28 @@ void UTP_WeaponComponent::Fire()
 void UTP_WeaponComponent::Reload()
 {
 	//Check Property Condition 
-	if (bIsReloading || CurrentAmmo <= 0) return;
+	if (bIsReloading || (!bInfiniteMagazine && CurrentAmmo <= 0)) return;
+
+	StopAiming();
 
 	//Set Property Condition
 	bIsReloading = true; 
 	bCanFire = false;
 
-	//ReloadAnimation 
-	//~
-
+	//ReloadAnimation & Sound
+	if (CurrentClipSize == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Empty"));
+		ReloadSpeed = PlayAnimMontage(EmptyReloadAnimation, CharacterEmptyReloadAnimation);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyReloadSound, GetComponentLocation());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not Empty"));
+		ReloadSpeed = PlayAnimMontage(ReloadAnimation, CharacterReloadAnimation);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetComponentLocation());
+	}
+	
 	//ReloadEffect 
 	//~
 	
@@ -102,8 +122,9 @@ void UTP_WeaponComponent::Reload()
 		{
 			//Update Ammo Info
 			const int32 needAmmo = MaxClipSize - CurrentClipSize;
-			const int32 addAmmo = FMath::Min(needAmmo, CurrentAmmo);
-			CurrentAmmo -= addAmmo;
+			const int32 addAmmo = FMath::Min(needAmmo, (int32)(bInfiniteMagazine ? 1e9 : CurrentAmmo));
+
+			if(!bInfiniteMagazine) CurrentAmmo -= addAmmo;
 			CurrentClipSize += addAmmo;
 
 			//Update Property Condition
@@ -113,22 +134,65 @@ void UTP_WeaponComponent::Reload()
 		}), ReloadSpeed, false);	// 반복하려면 false를 true로 변경
 }
 
+void UTP_WeaponComponent::StartAiming()
+{
+	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return;
+	bIsAiming = true;
+	return;
+}
+
+void UTP_WeaponComponent::StopAiming()
+{
+	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return;
+	bIsAiming = false;
+	return;
+}
+
 TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 {
-	if (GetSkinnedAsset()->FindSocket(FName("Muzzle")) == nullptr) return {};
+	UE_LOG(LogTemp, Warning, TEXT("Bullet 1"));
+	if (GetSkinnedAsset()->FindSocket(FName("SOCKET_Muzzle")) == nullptr) return {};
+	UE_LOG(LogTemp, Warning, TEXT("Bullet 2"));
 	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return {};
+	UE_LOG(LogTemp, Warning, TEXT("Bullet 3"));
 
 	//try trace by multi channel muzzle location to camera inf location 
-	const FVector& beginLocation = GetSocketLocation(FName("Muzzle"));
+	const FVector& beginLocation = GetSocketLocation(FName("SOCKET_Muzzle"));
 	const FVector& endLocation = (CharacterRef.Get()->FirstPersonCameraComponent->GetComponentLocation())
 		+ CharacterRef.Get()->FirstPersonCameraComponent->GetComponentRotation().Vector() * TRACE_LIMIT_DISTANCE;
 	
 	//only trace on world dynamic, pawn
 	TArray<FHitResult> hitResult;
 	UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), beginLocation, endLocation
-		, { (EObjectTypeQuery)ECC_WorldDynamic, (EObjectTypeQuery)ECC_Pawn }, false, {GetOwner()}
-		, EDrawDebugTrace::Type::ForDuration, hitResult, true);
+		, { (EObjectTypeQuery)ECC_WorldStatic, (EObjectTypeQuery)ECC_WorldDynamic, (EObjectTypeQuery)ECC_Pawn }, false
+		, {GetOwner()}, EDrawDebugTrace::Type::ForDuration, hitResult, true);
 	return hitResult;
+}
+
+float UTP_WeaponComponent::PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate)
+{
+	float avgPlayTime = 0.0f;
+
+	// Try and play a firing animation if specified
+	UE_LOG(LogTemp, Warning, TEXT("PlayAnim #1"));
+	if (MeshAnimation != nullptr)
+	{
+		UAnimInstance* meshAnimInstance = GetAnimInstance();
+		if (meshAnimInstance != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayAnim #2"));
+			avgPlayTime += meshAnimInstance->Montage_Play(MeshAnimation, InPlayRate);
+		}
+	}
+
+	if (CharacterAnimation != nullptr)
+	{
+		// Get the animation object for the arms mesh
+		UAnimInstance* characterAnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
+		if (characterAnimInstance != nullptr)
+			avgPlayTime += characterAnimInstance->Montage_Play(CharacterAnimation, InPlayRate);
+	}
+	return avgPlayTime / 2.0f;
 }
 
 void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
@@ -138,14 +202,11 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(CharacterRef.Get()->FirstPersonMesh, AttachmentRules, FName(TEXT("GripPoint")));
+	AttachToComponent(CharacterRef.Get()->FirstPersonMesh, AttachmentRules, FName(TEXT("SOCKET_Weapon")));
 
 	// switch bHasRifle so the animation blueprint can switch to another animation set
 	CharacterRef.Get()->SetHasRifle(true);
-	if (CharacterRef.Get()->GetClass() == UTP_WeaponComponent::StaticClass())
-	{
-		Cast<AMainCharacterBase>(CharacterRef.Get())->WeaponRef = this;
-	}
+	CharacterRef.Get()->WeaponRef = this;
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(CharacterRef.Get()->GetController()))
@@ -163,6 +224,12 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 
 			// Reload
 			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Reload);
+
+			// Start Aiming
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &UTP_WeaponComponent::StartAiming);
+
+			// Stop Aiming
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Canceled, this, &UTP_WeaponComponent::StopAiming);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// C	opyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -26,6 +26,21 @@ protected:
 	UFUNCTION()
 		virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+//===== Attachment =============================
+public:
+	UPROPERTY()
+		UStaticMeshComponent* ScopeComponent;
+
+	UPROPERTY(BlueprintReadOnly)
+		UStaticMeshComponent* MagazineComponent;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Attachment")
+		UStaticMesh* ScopeMesh;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Attachment")
+		UStaticMesh* MagazineMesh;
+
 //===== Action =============================
 public:
 	/** Attaches the actor to a FirstPersonCharacter */
@@ -36,9 +51,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void Fire();
 
-	/** Make the weapon  */
+	/** Reload */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void Reload();
+
+	/** Aim */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void StartAiming();
+
+	/** Aim */
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		void StopAiming();
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -52,23 +75,62 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* ReloadAction;
 
+	/** Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* AimAction;
+
 protected:
+	UFUNCTION(BlueprintImplementableEvent)
+		void SimulateRecoil();
+
 	UFUNCTION()
 		TArray<FHitResult> GetBulletHitResult();
 
 //===== Asset =============================
 public:
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-		USoundBase* FireSound;
-	
 	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
 		UAnimMontage* FireAnimation;
 
+	/** AnimMontage to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
+		UAnimMontage* CharacterFireAnimation;
+
+	/** AnimMontage to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
+		UAnimMontage* ReloadAnimation;
+
+	/** AnimMontage to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
+		UAnimMontage* CharacterReloadAnimation;
+	
+	/** AnimMontage to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
+		UAnimMontage* EmptyReloadAnimation;
+
+	/** AnimMontage to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
+		UAnimMontage* CharacterEmptyReloadAnimation;
+
+	/** Shoot Decal  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+		UMaterialInterface* DefaultDecal;
+
+	/** Sound Asset to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+		USoundBase* ReloadSound;
+
+	/** Sound Asset to play each time we reload */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+		USoundBase* EmptyReloadSound;
+
 	/** Gun muzzle's offset from the characters location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
 		FVector MuzzleOffset;
+
+private:
+	UFUNCTION()
+		float PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate = 1.0f);
 
 //===== Stat / State =============================
 protected:
@@ -84,6 +146,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
 		float ReloadSpeed;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay|Stat")
+		bool bInfiniteMagazine = false;
+
 private:
 	int32 CurrentClipSize;
 
@@ -94,6 +159,8 @@ private:
 	bool bCanFire = true;
 	
 	bool bIsReloading = false;
+
+	bool bIsAiming = false;
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -119,6 +186,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		bool GetIsReloading() { return bIsReloading; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetIsAiming() { return bIsAiming; }
 
 //===== Etc =============================
 private:

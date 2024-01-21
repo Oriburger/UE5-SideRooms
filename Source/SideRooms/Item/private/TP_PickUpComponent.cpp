@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "../public/TP_PickUpComponent.h"
+#include "../../Character/public/MainCharacterBase.h"
 #include "../../Character/public/CharacterBase.h"
 
 UTP_PickUpComponent::UTP_PickUpComponent()
@@ -20,11 +21,13 @@ void UTP_PickUpComponent::BeginPlay()
 void UTP_PickUpComponent::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	// Checking if it is a First Person Character overlapping
-	ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
-	if(Character != nullptr)
+	ACharacterBase* character = Cast<ACharacterBase>(OtherActor);
+
+	// Only player character is able to pick up
+	if(IsValid(character) && character->ActorHasTag("Player"))
 	{
 		// Notify that the actor is being picked up
-		OnPickUp.Broadcast(Character);
+		OnPickUp.Broadcast(character);
 
 		// Unregister from the Overlap Event so it is no longer triggered
 		OnComponentBeginOverlap.RemoveAll(this);
