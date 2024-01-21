@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #define TRACE_LIMIT_DISTANCE 50000.0f
 
@@ -58,7 +59,8 @@ void UTP_WeaponComponent::Fire()
 	for (FHitResult& target : targetList)
 	{
 		if (DefaultDecal != nullptr)
-			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecal, FVector(10.0f), target.Location, GetComponentRotation(), 0.0f);
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecal, FVector(10.0f), target.Location
+												, UKismetMathLibrary::FindLookAtRotation( GetComponentLocation(), target.Location), 0.0f);
 		if (IsValid(target.GetActor()))
 			UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
 	}
@@ -104,13 +106,11 @@ void UTP_WeaponComponent::Reload()
 	//ReloadAnimation & Sound
 	if (CurrentClipSize == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Empty"));
 		ReloadSpeed = PlayAnimMontage(EmptyReloadAnimation, CharacterEmptyReloadAnimation);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyReloadSound, GetComponentLocation());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Not Empty"));
 		ReloadSpeed = PlayAnimMontage(ReloadAnimation, CharacterReloadAnimation);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetComponentLocation());
 	}
@@ -150,11 +150,7 @@ void UTP_WeaponComponent::StopAiming()
 
 TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Bullet 1"));
-	if (GetSkinnedAsset()->FindSocket(FName("SOCKET_Muzzle")) == nullptr) return {};
-	UE_LOG(LogTemp, Warning, TEXT("Bullet 2"));
 	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return {};
-	UE_LOG(LogTemp, Warning, TEXT("Bullet 3"));
 
 	//try trace by multi channel muzzle location to camera inf location 
 	const FVector& beginLocation = GetSocketLocation(FName("SOCKET_Muzzle"));
@@ -174,15 +170,11 @@ float UTP_WeaponComponent::PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMon
 	float avgPlayTime = 0.0f;
 
 	// Try and play a firing animation if specified
-	UE_LOG(LogTemp, Warning, TEXT("PlayAnim #1"));
 	if (MeshAnimation != nullptr)
 	{
 		UAnimInstance* meshAnimInstance = GetAnimInstance();
 		if (meshAnimInstance != nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayAnim #2"));
 			avgPlayTime += meshAnimInstance->Montage_Play(MeshAnimation, InPlayRate);
-		}
 	}
 
 	if (CharacterAnimation != nullptr)
