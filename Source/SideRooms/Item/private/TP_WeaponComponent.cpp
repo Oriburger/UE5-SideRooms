@@ -6,7 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraComponent.h"
-#include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStatics.h"	
+#include "Perception/AISense_Hearing.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -56,11 +57,16 @@ void UTP_WeaponComponent::Fire()
 	TArray<FHitResult> targetList = GetBulletHitResult();
 	for (FHitResult& target : targetList)
 	{
-		if (DefaultDecal != nullptr)
-			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecal, FVector(10.0f), target.Location
-												, UKismetMathLibrary::FindLookAtRotation( GetComponentLocation(), target.Location), 0.0f);
 		if (IsValid(target.GetActor()))
+		{
 			UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
+		}
+		if (DefaultDecal != nullptr && target.GetComponent() != nullptr
+			&& target.GetComponent()->GetCollisionObjectType() != ECollisionChannel::ECC_Pawn)
+		{
+			UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DefaultDecal, FVector(10.0f), target.Location
+				, UKismetMathLibrary::FindLookAtRotation(GetComponentLocation(), target.Location), 0.0f);
+		}
 	}
 
 	// Simulate Recoil
@@ -68,11 +74,13 @@ void UTP_WeaponComponent::Fire()
 
 	// Try and play a firing animation if specified
 	PlayAnimMontage(FireAnimation, CharacterFireAnimation);
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetComponentLocation(), 10.0f, CharacterRef.Get());
+	CharacterRef.Get()->MakeNoise(10.0f, CharacterRef.Get(), GetComponentLocation());
 
 	//Auto Fire / Reload Condition
 	if (CurrentClipSize == 0)
 	{
-		Reload();
+		GetWorld()->GetTimerManager().SetTimer(AutoFireHandle, FTimerDelegate::CreateLambda([&]() { Reload(); }), 0.2f, false);
 	}
 	else
 	{
