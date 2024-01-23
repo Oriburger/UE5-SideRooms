@@ -20,12 +20,7 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 
 	ScopeComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Scope"));
-	ScopeComponent->SetupAttachment(this, "SOCKET_Default");
-	ScopeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 	MagazineComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Magazine"));
-	MagazineComponent->SetupAttachment(this, "SOCKET_Magazine");
-	MagazineComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void UTP_WeaponComponent::BeginPlay()
@@ -33,8 +28,11 @@ void UTP_WeaponComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentClipSize = MaxClipSize; 
-	if (ScopeComponent != nullptr && MagazineComponent != nullptr)
-	{
+	if (ScopeMesh != nullptr && MagazineMesh != nullptr)
+	{	
+		ScopeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MagazineComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 		ScopeComponent->SetStaticMesh(ScopeMesh);
 		MagazineComponent->SetStaticMesh(MagazineMesh);
 
@@ -70,7 +68,7 @@ void UTP_WeaponComponent::Fire()
 
 	// Try and play a firing animation if specified
 	PlayAnimMontage(FireAnimation, CharacterFireAnimation);
-	
+
 	//Auto Fire / Reload Condition
 	if (CurrentClipSize == 0)
 	{
