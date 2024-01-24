@@ -62,6 +62,9 @@ void AMainCharacterBase::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	//Init Default FOV
+	CurrentFieldOfView = FirstPersonCameraComponent->FieldOfView;
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -115,9 +118,7 @@ void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 	if (GetIsSprinting()) return;
 
 	StaminaFlag = -1;
-	Super::Sprint(Value);
-	FirstPersonCameraComponent->SetFieldOfView(100);
-
+	SetNewFieldOfView(100.0f);
 	if (!GetWorld()->GetTimerManager().IsTimerActive(SprintHandle))
 		GetWorld()->GetTimerManager().SetTimer(SprintHandle, this, &AMainCharacterBase::StaminaFunction, StaminaRate, true);
 }
@@ -135,7 +136,7 @@ void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 {
 	StaminaFlag = 1;
 	Super::StopSprint(Value);
-	FirstPersonCameraComponent->SetFieldOfView(90);
+	SetNewFieldOfView(90);
 }
 
 void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
@@ -148,6 +149,21 @@ void AMainCharacterBase::StopCrouch(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Stop Crouch"));
 	Super::UnCrouch();
+}
+
+void AMainCharacterBase::SetNewFieldOfView(float Value)
+{
+	TargetFieldOfView = Value;
+	GetWorldTimerManager().ClearTimer(FOVInterpHandle);
+	GetWorldTimerManager().SetTimer(FOVInterpHandle, this, &AMainCharacterBase::UpdateFOVValue, 0.01f, true);
+}
+
+void AMainCharacterBase::UpdateFOVValue()
+{
+	if (FMath::IsNearlyEqual(CurrentFieldOfView, TargetFieldOfView, 0.1))
+		GetWorldTimerManager().ClearTimer(FOVInterpHandle);
+	CurrentFieldOfView = FMath::FInterpTo(CurrentFieldOfView, TargetFieldOfView, 0.1f, 1.0f);
+	FirstPersonCameraComponent->SetFieldOfView(CurrentFieldOfView);
 }
 
 void AMainCharacterBase::SetHasRifle(bool bNewHasRifle)

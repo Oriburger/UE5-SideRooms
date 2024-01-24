@@ -133,6 +133,22 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		float GetMaxStamina() { return CharacterMaxStamina; }
 
+//======= Camera ====================================
+protected:
+	UFUNCTION()
+		void SetNewFieldOfView(float Value);
+
+private:
+	UFUNCTION()
+		void UpdateFOVValue();
+
+	UPROPERTY()
+		FTimerHandle FOVInterpHandle; 
+
+	float CurrentFieldOfView;
+
+	float TargetFieldOfView;
+
 //======= Pickup ====================================
 private:
 	/** Bool for AnimBP to switch to another animation set */

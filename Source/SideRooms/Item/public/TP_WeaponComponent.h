@@ -112,16 +112,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Animation")
 		UAnimMontage* CharacterEmptyReloadAnimation;
 
+	/** Bullet splah effect  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|VFX")
+		UParticleSystem* BulletSplashEffect;
+
 	/** Shoot Decal  */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|VFX")
 		UMaterialInterface* DefaultDecal;
 
 	/** Sound Asset to play each time we reload */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Sound")
 		USoundBase* ReloadSound;
 
 	/** Sound Asset to play each time we reload */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|etc")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Sound")
 		USoundBase* EmptyReloadSound;
 
 	/** Gun muzzle's offset from the characters location */
