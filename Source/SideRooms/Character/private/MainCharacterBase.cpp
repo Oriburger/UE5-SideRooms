@@ -118,7 +118,6 @@ void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 	if (GetIsSprinting()) return;
 
 	StaminaFlag = -1;
-	StaminaFlag = -1;
 	SetNewFieldOfView(100.0f);
 	if (!GetWorld()->GetTimerManager().IsTimerActive(SprintHandle))
 		GetWorld()->GetTimerManager().SetTimer(SprintHandle, this, &AMainCharacterBase::StaminaFunction, StaminaRate, true);
@@ -137,7 +136,7 @@ void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 {
 	StaminaFlag = 1;
 	Super::StopSprint(Value);
-	FirstPersonCameraComponent->SetFieldOfView(90);
+	SetNewFieldOfView(90);
 }
 
 void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
