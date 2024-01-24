@@ -228,6 +228,8 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 
 			// Stop Aiming
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Canceled, this, &UTP_WeaponComponent::StopAiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &UTP_WeaponComponent::StopAiming);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &UTP_WeaponComponent::StopAiming);
 		}
 	}
 }
