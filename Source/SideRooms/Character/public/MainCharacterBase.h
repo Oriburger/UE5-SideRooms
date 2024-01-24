@@ -40,8 +40,6 @@ public:
 protected:
 	virtual void BeginPlay();
 
-	virtual void Tick(float DeltaSeconds) override;
-
 //======== Component ==========================
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Mesh)
@@ -119,10 +117,13 @@ private:
 	/** Flag for Stamina Control */
 	int StaminaFlag;
 
-	/**Stamina Recovery Value */
+	/** Timer Rate for Stamina Control */
+	float StaminaRate;
+
+	/** Stamina Recovery Value */
 	float StaminaIncreaseval;
 
-	/**Stamina Consuming Value */
+	/** Stamina Consuming Value */
 	float StaminaReduceVal;
 
 public:
@@ -149,5 +150,12 @@ public:
 	/** Temp Value */
 	UPROPERTY(BlueprintReadOnly)
 		class UTP_WeaponComponent* WeaponRef;
+
+//===== Etc =============================
+	UPROPERTY(BlueprintReadOnly)
+		FTimerHandle SprintHandle;
+	
+	/** Function for Stamina Timer */
+	void StaminaFunction();
 };
 
