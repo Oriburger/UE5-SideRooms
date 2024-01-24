@@ -18,10 +18,9 @@ AMainCharacterBase::AMainCharacterBase()
 	Tags.Add("Player");
 
 	// Initialize Character Stamina State
-	CharacterCurrentStamina = CharacterMaxStamina;
-	StaminaFlag = 0;
 	StaminaIncreaseval = 0.1f;
 	StaminaReduceVal = 0.2f;
+	StaminaRate = 0.01f;
 
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
@@ -53,6 +52,8 @@ void AMainCharacterBase::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
+	CharacterCurrentStamina = CharacterMaxStamina;
+
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -64,34 +65,6 @@ void AMainCharacterBase::BeginPlay()
 
 	//Init Default FOV
 	CurrentFieldOfView = FirstPersonCameraComponent->FieldOfView;
-}
-
-
-void AMainCharacterBase::Tick(float DeltaSeconds)
-{
-	// Call the base class
-	Super::Tick(DeltaSeconds);
-
-	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= CharacterMaxStamina)
-	{
-		if (StaminaFlag == 1)
-			CharacterCurrentStamina += StaminaIncreaseval;
-		else
-			CharacterCurrentStamina += StaminaFlag * StaminaReduceVal;
-	}
-	else
-	{
-		if (CharacterCurrentStamina <= 0)
-		{
-			CharacterCurrentStamina = 0;
-			StaminaFlag = 1;
-		}
-		else
-		{
-			CharacterCurrentStamina = 100;
-			StaminaFlag = 0;
-		}
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -143,9 +116,12 @@ void AMainCharacterBase::Look(const FInputActionValue& Value)
 void AMainCharacterBase::Sprint(const FInputActionValue& Value)
 {
 	if (GetIsSprinting()) return;
-	Super::Sprint(Value);
+
+	StaminaFlag = -1;
 	StaminaFlag = -1;
 	SetNewFieldOfView(100.0f);
+	if (!GetWorld()->GetTimerManager().IsTimerActive(SprintHandle))
+		GetWorld()->GetTimerManager().SetTimer(SprintHandle, this, &AMainCharacterBase::StaminaFunction, StaminaRate, true);
 }
 
 void AMainCharacterBase::CheckStopSprint(const FInputActionValue& Value)
@@ -159,12 +135,9 @@ void AMainCharacterBase::CheckStopSprint(const FInputActionValue& Value)
 
 void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 {
-	if (StaminaFlag == -1)
-	{
-		Super::StopSprint(Value);
-		StaminaFlag = 1;
-		SetNewFieldOfView(90.0f);
-	}
+	StaminaFlag = 1;
+	Super::StopSprint(Value);
+	FirstPersonCameraComponent->SetFieldOfView(90);
 }
 
 void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
@@ -202,4 +175,28 @@ void AMainCharacterBase::SetHasRifle(bool bNewHasRifle)
 bool AMainCharacterBase::GetHasRifle()
 {
 	return bHasRifle;
+}
+
+void AMainCharacterBase::StaminaFunction()
+{
+	if (0 <= CharacterCurrentStamina && CharacterCurrentStamina <= 100)
+	{
+		if (StaminaFlag == 1)
+			CharacterCurrentStamina += StaminaIncreaseval;
+		else if (StaminaFlag == -1)
+			CharacterCurrentStamina -= StaminaReduceVal;
+	}
+	else
+	{
+		if (CharacterCurrentStamina <= 0)
+		{
+			CharacterCurrentStamina = 0;
+			StaminaFlag = 1;
+		}
+		else
+		{
+			CharacterCurrentStamina = 100;
+			GetWorld()->GetTimerManager().ClearTimer(SprintHandle);
+		}
+	}
 }
