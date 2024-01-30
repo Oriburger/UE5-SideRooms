@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -25,6 +26,13 @@ void ACharacterBase::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+}
+
+float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	CharacterCurrHP = FMath::Max(0, CharacterCurrHP - Damage);
+
+	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
 void ACharacterBase::Move(const FInputActionValue& Value)

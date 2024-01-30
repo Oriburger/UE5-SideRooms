@@ -7,6 +7,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/Controller.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -67,6 +68,11 @@ void AMainCharacterBase::BeginPlay()
 	CurrentFieldOfView = FirstPersonCameraComponent->FieldOfView;
 }
 
+float AMainCharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+}
+
 //////////////////////////////////////////////////////////////////////////// Input
 
 void AMainCharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -84,7 +90,7 @@ void AMainCharacterBase::SetupPlayerInputComponent(class UInputComponent* Player
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::Look);
 
-		////Sprinting
+		//Sprinting
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AMainCharacterBase::Sprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::CheckStopSprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopSprint);
