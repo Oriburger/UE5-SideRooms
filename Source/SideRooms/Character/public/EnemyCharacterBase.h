@@ -19,6 +19,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
 	/** Called for movement input */
 	virtual void Move(const FInputActionValue& Value);

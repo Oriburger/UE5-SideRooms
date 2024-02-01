@@ -31,7 +31,7 @@ public:
 	UPROPERTY()
 		UStaticMeshComponent* ScopeComponent;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY()
 		UStaticMeshComponent* MagazineComponent;
 
 protected:
@@ -42,13 +42,34 @@ protected:
 		UStaticMesh* MagazineMesh;
 
 //===== Action =============================
-public:
+protected:
+	/** MappingContext */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputMappingContext* WeaponMappingContext;
+
+	/** Fire Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* FireAction;
+
+	/** Reload Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* ReloadAction;
+
+	/** Aim Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* AimAction;
+
+	/** Sprint Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* SprintAction;
+
+protected:
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void AttachWeapon(AMainCharacterBase* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable, Category = "Weapon")
 		void Fire();
 
 	/** Reload */
@@ -63,21 +84,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 		void StopAiming();
 
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputMappingContext* WeaponMappingContext;
+private:
+	UFUNCTION()
+		void TryFire();
 
-	/** Fire Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* FireAction;
-	
-	/** Reload Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* ReloadAction;
-
-	/** Aim Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		class UInputAction* AimAction;
+	UFUNCTION(Server, Reliable)
+		void ServerRPCFire();
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
@@ -114,11 +126,19 @@ public:
 
 	/** Bullet splah effect  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|VFX")
-		UParticleSystem* BulletSplashEffect;
+		UParticleSystem* BulletSplashEmitter;
+
+	/** Fire Flame effect  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|VFX")
+		UParticleSystem* FireFlashEmitter;
 
 	/** Shoot Decal  */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|VFX")
 		UMaterialInterface* DefaultDecal;
+
+	/** Sound Asset to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Sound")
+		USoundBase* FireSound;
 
 	/** Sound Asset to play each time we reload */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Asset|Sound")
@@ -133,8 +153,23 @@ public:
 		FVector MuzzleOffset;
 
 private:
+	UFUNCTION(NetMulticast, Reliable)
+		void PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate = 1.0f);
+
+	UFUNCTION(Server, Reliable)
+		void ServerRPCPlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate = 1.0f);
+
 	UFUNCTION()
-		float PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate = 1.0f);
+		void TryPlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate = 1.0f);
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void SpawnFireEffect();
+
+	UFUNCTION(Server, Unreliable)
+		void ServerRPCSpawnFireEffect();
+
+	UFUNCTION()
+		void TrySpawnFireEffect();
 
 //===== Stat / State =============================
 protected:

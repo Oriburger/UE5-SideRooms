@@ -40,6 +40,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 //======== Component ==========================
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Mesh)

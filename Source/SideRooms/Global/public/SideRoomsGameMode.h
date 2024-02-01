@@ -13,6 +13,9 @@ class ASideRoomsGameMode : public AGameModeBase
 
 public:
 	ASideRoomsGameMode();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		FString GetMyIpAddress();
 };
 
 

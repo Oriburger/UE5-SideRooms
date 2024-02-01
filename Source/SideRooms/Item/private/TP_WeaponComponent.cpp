@@ -3,6 +3,7 @@
 
 #include "../public/TP_WeaponComponent.h"
 #include "../../Character/public/MainCharacterBase.h"
+#include "Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraComponent.h"
@@ -29,7 +30,7 @@ void UTP_WeaponComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentClipSize = MaxClipSize; 
-	if (ScopeMesh != nullptr && MagazineMesh != nullptr)
+	if (ScopeMesh != nullptr && MagazineMesh != nullptr && FireFlashEmitter)
 	{	
 		ScopeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		MagazineComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -42,8 +43,10 @@ void UTP_WeaponComponent::BeginPlay()
 	}
 }
 
-void UTP_WeaponComponent::Fire()
+void UTP_WeaponComponent::Fire_Implementation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Fire() -> Role : %d"), GetOwner()->GetLocalRole());
+	
 	//Check Validity
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
 
@@ -69,14 +72,17 @@ void UTP_WeaponComponent::Fire()
 		}
 	}
 
+	//Play sound effect with perception trigger
+	TrySpawnFireEffect();
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetComponentLocation(), 10.0f, CharacterRef.Get());
+	CharacterRef.Get()->MakeNoise(10.0f, CharacterRef.Get(), GetComponentLocation());
+
 	// Simulate Recoil
 	SimulateRecoil();
 
 	// Try and play a firing animation if specified
-	PlayAnimMontage(FireAnimation, CharacterFireAnimation);
-	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetComponentLocation(), 10.0f, CharacterRef.Get());
-	CharacterRef.Get()->MakeNoise(10.0f, CharacterRef.Get(), GetComponentLocation());
-
+	TryPlayAnimMontage(FireAnimation, CharacterFireAnimation);
+	
 	//Auto Fire / Reload Condition
 	if (CurrentClipSize == 0)
 	{
@@ -112,12 +118,14 @@ void UTP_WeaponComponent::Reload()
 	//ReloadAnimation & Sound
 	if (CurrentClipSize == 0)
 	{
-		ReloadSpeed = PlayAnimMontage(EmptyReloadAnimation, CharacterEmptyReloadAnimation);
+		ReloadSpeed = 1.0f;
+		TryPlayAnimMontage(EmptyReloadAnimation, CharacterEmptyReloadAnimation);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), EmptyReloadSound, GetComponentLocation());
 	}
 	else
 	{
-		ReloadSpeed = PlayAnimMontage(ReloadAnimation, CharacterReloadAnimation);
+		ReloadSpeed = 1.0f;
+		TryPlayAnimMontage(ReloadAnimation, CharacterReloadAnimation);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ReloadSound, GetComponentLocation());
 	}
 	
@@ -154,6 +162,24 @@ void UTP_WeaponComponent::StopAiming()
 	return;
 }
 
+void UTP_WeaponComponent::TryFire()
+{
+	if (!GetOwner()->HasAuthority())
+	{
+		ServerRPCFire(); 
+	}
+	else
+	{
+		Fire();
+	}
+}
+
+void UTP_WeaponComponent::ServerRPCFire_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Fire on Server!"));
+	Fire();
+}
+
 TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 {
 	if (!CharacterRef.IsValid() || !IsValid(GetOwner())) return {};
@@ -171,7 +197,7 @@ TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 	return hitResult;
 }
 
-float UTP_WeaponComponent::PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate)
+void UTP_WeaponComponent::PlayAnimMontage_Implementation(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate)
 {
 	float avgPlayTime = 0.0f;
 
@@ -180,7 +206,7 @@ float UTP_WeaponComponent::PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMon
 	{
 		UAnimInstance* meshAnimInstance = GetAnimInstance();
 		if (meshAnimInstance != nullptr)
-			avgPlayTime += meshAnimInstance->Montage_Play(MeshAnimation, InPlayRate);
+			meshAnimInstance->Montage_Play(MeshAnimation, InPlayRate);
 	}
 
 	if (CharacterAnimation != nullptr)
@@ -188,9 +214,42 @@ float UTP_WeaponComponent::PlayAnimMontage(UAnimMontage* MeshAnimation, UAnimMon
 		// Get the animation object for the arms mesh
 		UAnimInstance* characterAnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
 		if (characterAnimInstance != nullptr)
-			avgPlayTime += characterAnimInstance->Montage_Play(CharacterAnimation, InPlayRate);
+			characterAnimInstance->Montage_Play(CharacterAnimation, InPlayRate);
 	}
-	return avgPlayTime / 2.0f;
+}
+
+void UTP_WeaponComponent::ServerRPCPlayAnimMontage_Implementation(UAnimMontage* AnimMontage, UAnimMontage* CharacterMontage, float InPlayRate)
+{
+	PlayAnimMontage(AnimMontage, CharacterMontage, InPlayRate);
+}
+
+void UTP_WeaponComponent::TryPlayAnimMontage(UAnimMontage* AnimMontage, UAnimMontage* CharacterMontage, float InPlayRate)
+{
+	if (!GetOwner()->HasAuthority())
+		ServerRPCPlayAnimMontage(AnimMontage, CharacterMontage, InPlayRate);
+	else
+		PlayAnimMontage(AnimMontage, CharacterMontage, InPlayRate);
+}
+
+void UTP_WeaponComponent::SpawnFireEffect_Implementation()
+{
+	//Spawn Emitter & Sound
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireFlashEmitter, GetSocketLocation("SOCKET_Muzzle")
+										, GetSocketRotation("SOCKET_Muzzle") + FRotator(0.0f, 90.0f, 0.0f));
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireSound, GetComponentLocation());
+}
+
+void UTP_WeaponComponent::ServerRPCSpawnFireEffect_Implementation()
+{
+	SpawnFireEffect();
+}
+
+void UTP_WeaponComponent::TrySpawnFireEffect()
+{
+	if (!GetOwner()->HasAuthority())
+		ServerRPCSpawnFireEffect();
+	else
+		SpawnFireEffect();
 }
 
 void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
@@ -218,7 +277,7 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
 			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::TryFire);
 
 			// Reload
 			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Reload);
@@ -228,6 +287,8 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 
 			// Stop Aiming
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Canceled, this, &UTP_WeaponComponent::StopAiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &UTP_WeaponComponent::StopAiming);
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &UTP_WeaponComponent::StopAiming);
 		}
 	}
 }
