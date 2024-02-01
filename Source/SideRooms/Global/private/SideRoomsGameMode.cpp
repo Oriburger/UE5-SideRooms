@@ -2,12 +2,22 @@
 
 #include "../public/SideRoomsGameMode.h"
 #include "UObject/ConstructorHelpers.h"
+#include "SocketSubsystem.h"
 
 ASideRoomsGameMode::ASideRoomsGameMode()
 	: Super()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
-	DefaultPawnClass = PlayerPawnClassFinder.Class;
+	
+}
 
+FString ASideRoomsGameMode::GetMyIpAddress()
+{
+	FString IpAddr("NONE");
+	bool canBind = false;
+	TSharedRef<FInternetAddr> LocalIp = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, canBind);
+	if (LocalIp->IsValid()) 
+	{ 
+		IpAddr  = LocalIp->ToString(false); 
+	}       
+	return IpAddr;
 }
