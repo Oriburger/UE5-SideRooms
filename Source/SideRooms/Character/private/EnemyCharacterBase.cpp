@@ -8,6 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AIController.h"
+#include "BrainComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -16,6 +18,7 @@
 
 AEnemyCharacterBase::AEnemyCharacterBase()
 {
+	Tags.Add("Enemy");
 }
 
 void AEnemyCharacterBase::BeginPlay()
@@ -42,4 +45,16 @@ void AEnemyCharacterBase::Sprint(const FInputActionValue& Value)
 void AEnemyCharacterBase::StopSprint(const FInputActionValue& Value)
 {
 	Super::StopSprint(Value);
+}
+
+void AEnemyCharacterBase::EnableMovement()
+{
+	Super::EnableMovement();
+	if(IsValid(Controller)) Cast<AAIController>(Controller)->GetBrainComponent()->RestartLogic();
+}
+
+void AEnemyCharacterBase::DisableMovement()
+{
+	Super::DisableMovement();
+	if (IsValid(Controller)) Cast<AAIController>(Controller)->GetBrainComponent()->StopLogic("");
 }

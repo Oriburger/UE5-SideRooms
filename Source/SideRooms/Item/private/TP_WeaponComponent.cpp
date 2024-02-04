@@ -44,9 +44,7 @@ void UTP_WeaponComponent::BeginPlay()
 }
 
 void UTP_WeaponComponent::Fire_Implementation()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Fire() -> Role : %d"), GetOwner()->GetLocalRole());
-	
+{	
 	//Check Validity
 	if (!CharacterRef.IsValid() || !IsValid(CharacterRef.Get()->GetController())) return;
 

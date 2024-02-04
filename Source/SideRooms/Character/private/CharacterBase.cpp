@@ -26,6 +26,11 @@ void ACharacterBase::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (!HasAuthority())
+		ServerRPCDisableMovement();
+	else
+		DisableMovement();
 }
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -33,6 +38,26 @@ float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
 	CharacterCurrHP = FMath::Max(0, CharacterCurrHP - Damage);
 
 	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+}
+
+void ACharacterBase::EnableMovement_Implementation()
+{
+	GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+}
+
+void ACharacterBase::DisableMovement_Implementation()
+{
+	GetCharacterMovement()->DisableMovement();
+}
+
+void ACharacterBase::ServerRPCEnableMovement_Implementation()
+{
+	EnableMovement();
+}
+
+void ACharacterBase::ServerRPCDisableMovement_Implementation()
+{
+	DisableMovement();
 }
 
 void ACharacterBase::Move(const FInputActionValue& Value)
