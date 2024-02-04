@@ -27,7 +27,20 @@ protected:
 
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
-//==== Movement =============================== 
+//==== Movement / Input =============================== 
+public:
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+		virtual void EnableMovement();
+
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+		virtual void DisableMovement();
+
+	UFUNCTION(Server, Reliable)
+		void ServerRPCEnableMovement();		
+
+	UFUNCTION(Server, Reliable)
+		void ServerRPCDisableMovement();
+
 protected:
 	/** Called for movement input */
 	virtual void Move(const FInputActionValue& Value);
@@ -37,6 +50,16 @@ protected:
 	virtual void StopSprint(const FInputActionValue& Value);
 
 //====CharacterStat, CharacterState============
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		bool GetIsSprinting() { return bIsSprinting; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetCurrentHP() { return CharacterCurrHP; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		int32 GetMaxHP() { return CharacterMaxHP; }
+
 protected:
 	/** Character Max HP **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Stat")
@@ -52,13 +75,4 @@ protected:
 	/** Character  */
 	bool bIsSprinting = false;
 
-public:
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		bool GetIsSprinting() { return bIsSprinting; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		int32 GetCurrentHP() { return CharacterCurrHP; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-		int32 GetMaxHP() { return CharacterMaxHP; }
 };

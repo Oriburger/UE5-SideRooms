@@ -56,6 +56,11 @@ public:
 
 //======== Input / Action ============================
 public:
+	virtual void EnableMovement() override;
+
+	virtual void DisableMovement() override;
+
+public:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;

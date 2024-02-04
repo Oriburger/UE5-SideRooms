@@ -28,4 +28,9 @@ protected:
 	virtual void Sprint(const FInputActionValue& Value);
 
 	virtual void StopSprint(const FInputActionValue& Value);
+
+public:
+	virtual void EnableMovement() override;
+
+	virtual void DisableMovement() override;
 };
