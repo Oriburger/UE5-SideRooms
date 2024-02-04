@@ -16,7 +16,7 @@ class SIDEROOMS_API ASideRoomsGameState : public AGameStateBase
 
 //====== Game Start ================
 public:
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 		void InitGame();
 
 protected:

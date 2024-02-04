@@ -6,7 +6,7 @@
 #include "../../Character/public/CharacterBase.h"
 #include "../../Character/public/EnemyCharacterBase.h"
 
-void ASideRoomsGameState::InitGame()
+void ASideRoomsGameState::InitGame_Implementation()
 {
 	// Map & Mission Init
 	InitMap();
