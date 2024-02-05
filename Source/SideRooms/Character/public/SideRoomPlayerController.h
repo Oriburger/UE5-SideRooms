@@ -14,8 +14,15 @@ class SIDEROOMS_API ASideRoomPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-public:
-	UFUNCTION(BlueprintImplementableEvent)
-		void InitHUD();
+//==== Basic ===================
+protected:
+	virtual void OnPossess(APawn* InPawn) override;
 
+//==== Widget ===================
+protected:
+	UFUNCTION(Client, Reliable)
+		void InitWidget();	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Widget")
+		TSubclassOf<class UUserWidget> DefaultWidgetClass;
 };

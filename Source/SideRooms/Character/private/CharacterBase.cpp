@@ -35,8 +35,8 @@ void ACharacterBase::BeginPlay()
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	UE_LOG(LogTemp, Warning, TEXT("TakeDamage : Get %.2lf Damage "), Damage);
 	CharacterCurrHP = FMath::Max(0, CharacterCurrHP - Damage);
-
 	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
@@ -88,4 +88,10 @@ void ACharacterBase::StopSprint(const FInputActionValue& Value)
 	
 	bIsSprinting = false;
 	GetCharacterMovement()->MaxWalkSpeed /= SprintMultipleVal;
+}
+
+void ACharacterBase::Die()
+{
+	//임시 함수
+	Destroy();
 }

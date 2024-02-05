@@ -1,11 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "../public/MainCharacterBase.h"
+#include "../public/SideRoomPlayerController.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/Controller.h"
@@ -67,9 +67,6 @@ void AMainCharacterBase::BeginPlay()
 
 	//Init Default FOV
 	CurrentFieldOfView = FirstPersonCameraComponent->FieldOfView;
-
-	//Set input mode
-	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Cast<APlayerController>(Controller), false);
 }
 
 float AMainCharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -159,6 +156,11 @@ void AMainCharacterBase::StopCrouch(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Stop Crouch"));
 	Super::UnCrouch();
+}
+
+void AMainCharacterBase::Die()
+{
+	Super::Die();
 }
 
 void AMainCharacterBase::EnableMovement()
