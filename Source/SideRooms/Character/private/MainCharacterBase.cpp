@@ -148,13 +148,11 @@ void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 
 void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Crouch"));
 	Super::Crouch();
 }
 
 void AMainCharacterBase::StopCrouch(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Crouch"));
 	Super::UnCrouch();
 }
 
