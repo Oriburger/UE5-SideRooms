@@ -289,6 +289,9 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 	CharacterRef = TargetCharacter;
 	if (!CharacterRef.IsValid()) return;
 
+	//Detach from parent
+	DetachFromParent();
+
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	AttachToComponent(CharacterRef.Get()->FirstPersonMesh, AttachmentRules, FName(TEXT("SOCKET_Weapon")));

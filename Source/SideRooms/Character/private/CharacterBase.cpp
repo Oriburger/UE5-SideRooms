@@ -35,7 +35,7 @@ void ACharacterBase::BeginPlay()
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	UE_LOG(LogTemp, Warning, TEXT("TakeDamage : Get %.2lf Damage "), Damage);
+	//UE_LOG(LogTemp, Warning, TEXT("TakeDamage : Get %.2lf Damage "), Damage);
 	CharacterCurrHP = FMath::Max(0, CharacterCurrHP - Damage);
 	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
