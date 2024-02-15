@@ -1,16 +1,19 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "../public/MainCharacterBase.h"
+#include "../public/SideRoomPlayerController.h"
 #include "Animation/AnimInstance.h"
+#include "../../Item/public/Interactable.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+#define MAX_INTERACT_DISTANCE 300.0f;
 
 //////////////////////////////////////////////////////////////////////////
 // AMainCharacterBase
@@ -18,6 +21,7 @@
 AMainCharacterBase::AMainCharacterBase()
 {
 	Tags.Add("Player");
+	SetActorTickInterval(0.25f);
 
 	// Initialize Character Stamina State
 	StaminaIncreaseval = 0.1f;
@@ -67,9 +71,14 @@ void AMainCharacterBase::BeginPlay()
 
 	//Init Default FOV
 	CurrentFieldOfView = FirstPersonCameraComponent->FieldOfView;
+}
 
-	//Set input mode
-	UWidgetBlueprintLibrary::SetInputMode_GameOnly(Cast<APlayerController>(Controller), false);
+void AMainCharacterBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	//Find Interactive Prop using Tick per 0.25 sec
+	FindInteractiveProp();
 }
 
 float AMainCharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -102,6 +111,36 @@ void AMainCharacterBase::SetupPlayerInputComponent(class UInputComponent* Player
 		//Crouching
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::StartCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AMainCharacterBase::StopCrouch);
+	
+		//Interacting
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &AMainCharacterBase::Interact);
+	}
+}
+
+void AMainCharacterBase::FindInteractiveProp()
+{
+	if (!bCanInteract) return; 
+	FVector beginLocation = FirstPersonCameraComponent->GetComponentLocation();
+	FVector endLocation = beginLocation + FirstPersonCameraComponent->GetForwardVector() * MAX_INTERACT_DISTANCE;
+
+	FHitResult hitResult;
+	UKismetSystemLibrary::LineTraceSingle(GetWorld(), beginLocation, endLocation
+										, (ETraceTypeQuery)ECC_GameTraceChannel2, false, {this}
+										, EDrawDebugTrace::None, hitResult, true, FColor::Red, FColor::Green, 0.3f);
+	
+	if (hitResult.bBlockingHit)
+	{
+		if (hitResult.GetComponent()->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
+		{
+			InteractablePropRef = hitResult.GetComponent();
+			InteractablePropRef->Activate();
+			return;
+		}
+	}	
+	if(InteractablePropRef != nullptr)
+	{
+		InteractablePropRef->Deactivate();
+		InteractablePropRef = nullptr;
 	}
 }
 
@@ -151,14 +190,23 @@ void AMainCharacterBase::StopSprint(const FInputActionValue& Value)
 
 void AMainCharacterBase::StartCrouch(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Crouch"));
 	Super::Crouch();
 }
 
 void AMainCharacterBase::StopCrouch(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Crouch"));
 	Super::UnCrouch();
+}
+
+void AMainCharacterBase::Interact(const FInputActionValue& Value)
+{
+	if(InteractablePropRef == nullptr) return;
+	InteractablePropRef->Interact(this);
+}
+
+void AMainCharacterBase::Die()
+{
+	Super::Die();
 }
 
 void AMainCharacterBase::EnableMovement()

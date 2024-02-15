@@ -49,6 +49,8 @@ protected:
 
 	virtual void StopSprint(const FInputActionValue& Value);
 
+	virtual void Die();
+
 //====CharacterStat, CharacterState============
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -75,4 +77,9 @@ protected:
 	/** Character  */
 	bool bIsSprinting = false;
 
+///====Init Widget================
+protected:
+	//Init Widget & Input mode
+	UFUNCTION(BlueprintImplementableEvent)
+		void InitWidget();
 };

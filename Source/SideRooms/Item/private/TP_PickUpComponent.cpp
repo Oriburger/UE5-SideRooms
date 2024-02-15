@@ -6,30 +6,28 @@
 
 UTP_PickUpComponent::UTP_PickUpComponent()
 {
-	// Setup the Sphere Collision
-	SphereRadius = 32.f;
+	SphereRadius = 5.0f;
 }
 
 void UTP_PickUpComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Register our Overlap Event
-	OnComponentBeginOverlap.AddDynamic(this, &UTP_PickUpComponent::OnSphereBeginOverlap);
 }
 
-void UTP_PickUpComponent::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void UTP_PickUpComponent::Interact(AActor* Interactor)
 {
-	// Checking if it is a First Person Character overlapping
-	ACharacterBase* character = Cast<ACharacterBase>(OtherActor);
+	if (!IsValid(Interactor) || !Interactor->ActorHasTag("Player")) return;
+	OnPickUp.Broadcast(Cast<ACharacterBase>(Interactor));
+}
 
-	// Only player character is able to pick up
-	if(IsValid(character) && character->ActorHasTag("Player"))
-	{
-		// Notify that the actor is being picked up
-		OnPickUp.Broadcast(character);
+void UTP_PickUpComponent::Activate()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Activate"));
+	OnBeginFocus.Broadcast();
+}
 
-		// Unregister from the Overlap Event so it is no longer triggered
-		OnComponentBeginOverlap.RemoveAll(this);
-	}
+void UTP_PickUpComponent::Deactivate()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Deactivate"));
+	OnEndFocus.Broadcast();
 }

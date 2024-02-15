@@ -29,6 +29,7 @@ void ASideRoomsGameState::InitMonster()
 	AEnemyCharacterBase* enemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(EnemyCharacterClass, FVector(0.0f, 0.0f, 100.0f), FRotator());
 	checkf(enemy != nullptr, TEXT("ASideRoomsGameState::InitGame -> Failed to spawn enemy character"));
 	EnemyCharacterRefList.Add(enemy);
+	enemy->EnableMovement();
 }
 
 void ASideRoomsGameState::InitPlayer()
