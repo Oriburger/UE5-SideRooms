@@ -56,11 +56,36 @@ void UTP_WeaponComponent::Fire_Implementation()
 
 	//Hit Scan & Damage Logic
 	TArray<FHitResult> targetList = GetBulletHitResult();
+	TArray<AActor*> damageActorList;
+
 	for (FHitResult& target : targetList)
 	{
-		if (IsValid(target.GetActor()))
+		FString str = UKismetSystemLibrary::GetDisplayName(target.GetComponent());
+		UE_LOG(LogTemp, Warning, TEXT("Target : %s"), *str);
+		if (IsValid(target.GetActor()) && target.GetActor()->ActorHasTag("Enemy"))
 		{
-			UGameplayStatics::ApplyDamage(target.GetActor(), 1.0f, nullptr, CharacterRef.Get(), nullptr);
+			float damageAmount = 1.0f;
+
+			if (target.GetComponent()->ComponentHasTag("Head"))
+			{
+				damageAmount = 2.0f;
+				//Head Hit Event
+				// ...
+			}
+			else if (target.GetComponent()->ComponentHasTag("LeftLeg"))
+			{
+				damageAmount = 1.5f;
+				//Leg Hit Event
+				// ...
+			}
+			else if (target.GetComponent()->ComponentHasTag("RightLeg"))
+			{
+				damageAmount = 1.5f;
+				//Leg Hit Event
+				// ...
+			}
+
+			UGameplayStatics::ApplyDamage(target.GetActor(), damageAmount, nullptr, CharacterRef.Get(), nullptr);
 		}
 		if (DefaultDecal != nullptr && target.GetComponent() != nullptr
 			&& target.GetComponent()->GetCollisionObjectType() != ECollisionChannel::ECC_Pawn)
@@ -174,7 +199,6 @@ void UTP_WeaponComponent::TryFire()
 
 void UTP_WeaponComponent::ServerRPCFire_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Fire on Server!"));
 	Fire();
 }
 
@@ -186,13 +210,23 @@ TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 	const FVector& beginLocation = GetSocketLocation(FName("SOCKET_Muzzle"));
 	const FVector& endLocation = (CharacterRef.Get()->FirstPersonCameraComponent->GetComponentLocation())
 		+ CharacterRef.Get()->FirstPersonCameraComponent->GetComponentRotation().Vector() * TRACE_LIMIT_DISTANCE;
-	
+
+	FCollisionQueryParams collisionQueryParams;
+	collisionQueryParams.AddIgnoredActor(CharacterRef.Get());
+	collisionQueryParams.AddIgnoredComponent(this);
+
 	//only trace on world dynamic, pawn
-	TArray<FHitResult> hitResult;
-	UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), beginLocation, endLocation
-		, { (EObjectTypeQuery)ECC_WorldStatic, (EObjectTypeQuery)ECC_WorldDynamic, (EObjectTypeQuery)ECC_Pawn }, false
-		, {GetOwner()}, EDrawDebugTrace::Type::ForDuration, hitResult, true);
-	return hitResult;
+	FHitResult hitResult;
+	GetWorld()->LineTraceSingleByChannel(hitResult, beginLocation, endLocation
+										, ECollisionChannel::ECC_Camera, collisionQueryParams);
+	
+	if (hitResult.bBlockingHit)
+	{
+		DrawDebugLine(GetWorld(), hitResult.Location, endLocation, FColor::Green, false, 2.0f, 0, 1.5f);
+		DrawDebugLine(GetWorld(), beginLocation, hitResult.Location, FColor::Red, false, 2.0f, 0, 2.0f);
+	}
+
+	return { hitResult };
 }
 
 void UTP_WeaponComponent::PlayAnimMontage_Implementation(UAnimMontage* MeshAnimation, UAnimMontage* CharacterAnimation, float InPlayRate)
@@ -254,6 +288,9 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 {
 	CharacterRef = TargetCharacter;
 	if (!CharacterRef.IsValid()) return;
+
+	//Detach from parent
+	DetachFromParent();
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);

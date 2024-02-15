@@ -40,6 +40,8 @@ public:
 protected:
 	virtual void BeginPlay();
 
+	virtual void Tick(float DeltaTime);
+
 	virtual float TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 //======== Component ==========================
@@ -61,55 +63,81 @@ public:
 	virtual void DisableMovement() override;
 
 public:
-	/** MappingContext */
+	// MappingContext
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
+	// Jump Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* JumpAction;
 
-	/** Move Input Action */
+	// Move Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* MoveAction;
 
-	/** Look Input Action */
+	// Look Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* LookAction;
 
+	//Sprint Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* SprintAction;
 
-	/** Crouch Input Action */
+	// Crouch Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* CrouchAction;
 
+	// Interact Input Action
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* InteractAction;
+
 protected:
-	/** Called for movement input */
+	// Called for movement input
 	virtual void Move(const FInputActionValue& Value) override;
 
-	/** Called for looking input */
+	// Called for looking input
 	void Look(const FInputActionValue& Value);
 
-	/** Called for sprinting input */
+	// Called for sprinting input
 	void Sprint(const FInputActionValue& Value);
 
-	/** Called for sprinting input */
+	// Called for sprinting input
 	void CheckStopSprint(const FInputActionValue& Value);
 
-	/** Called for stop sprinting input */
+	// Called for stop sprinting input
 	void StopSprint(const FInputActionValue& Value);
 
-	/** Called for crouching input */
+	// Called for crouching input
 	void StartCrouch(const FInputActionValue& Value);
 	
-	/** Called for stop sprinting input */
+	// Called for stop sprinting input
 	void StopCrouch(const FInputActionValue& Value);
+
+	// Try Interact
+	void Interact(const FInputActionValue& Value);
+
+	// Die Event
+	virtual void Die() override;
 
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
+
+//======= Interaction ==============================
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		TScriptInterface<class IInteractable> GetInteractablePropRef() { return InteractablePropRef; }
+
+protected:	
+	//Find interactive prop using line trace
+	UFUNCTION()
+		void FindInteractiveProp();
+
+private:
+	// Reference to currently interactable object
+	TScriptInterface<class IInteractable> InteractablePropRef;
+
+	bool bCanInteract = true;
 
 //======= Stats ====================================
 protected:

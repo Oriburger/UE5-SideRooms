@@ -29,6 +29,9 @@ void AEnemyCharacterBase::BeginPlay()
 
 float AEnemyCharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	//if(NormalHitMontage != nullptr)
+	//	PlayAnimMontage(NormalHitMontage);
+
 	return Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 }
 
