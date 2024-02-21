@@ -18,6 +18,10 @@ class SIDEROOMS_API ASideRoomPlayerController : public APlayerController
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
+public:
+	UFUNCTION(Client, Reliable)
+		void DisconnectGame();
+
 //==== Widget ===================
 protected:
 	UFUNCTION(Client, Reliable)

@@ -55,6 +55,7 @@ void ASideRoomsGameState::TryUpdateMissionCount(int32 AddValue)
 void ASideRoomsGameState::UpdateMissionCount_Implementation(int AddValue)
 {
 	CurrentMissionCount += AddValue;
+
 }
 
 void ASideRoomsGameState::ServerRPCUpdateMissionCount_Implementation(int AddValue)
