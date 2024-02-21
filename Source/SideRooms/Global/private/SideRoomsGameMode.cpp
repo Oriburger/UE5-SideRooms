@@ -13,14 +13,16 @@ ASideRoomsGameMode::ASideRoomsGameMode() : Super()
 
 void ASideRoomsGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
 {
-	UE_LOG(LogTemp, Warning, TEXT("PRELOGIN#1\n"));
-	if (bHasBegun || PlayerControllerList.Num() >= 2) return;
-	UE_LOG(LogTemp, Warning, TEXT("PRELOGIN#2\n"));
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
 }
 
 void ASideRoomsGameMode::PostLogin(APlayerController* NewPlayer)
 {
+	if (bHasBegun || PlayerControllerList.Num() >= 2)
+	{
+		Cast<ASideRoomPlayerController>(NewPlayer)->DisconnectGame();
+	}
+
 	Super::PostLogin(NewPlayer);
 
 	//Add new player to list 

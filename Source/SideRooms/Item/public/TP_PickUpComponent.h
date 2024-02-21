@@ -4,17 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "Interactable.h"
 #include "TP_PickUpComponent.generated.h"
 
 // Declaration of the delegate that will be called when someone picks this up
 // The character picking this up is the parameter sent with the notification
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, ACharacterBase*, PickUpCharacter);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBeginFocus);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndFocus);
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class SIDEROOMS_API UTP_PickUpComponent : public USphereComponent, public IInteractable
+class SIDEROOMS_API UTP_PickUpComponent : public USphereComponent
 {
 	GENERATED_BODY()
 
@@ -30,21 +27,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 		FOnPickUp OnPickUp;
 
-	UPROPERTY(BlueprintAssignable, Category = "Interaction")
-		FOnBeginFocus OnBeginFocus;
-
-	UPROPERTY(BlueprintAssignable, Category = "Interaction")
-		FOnEndFocus OnEndFocus; 
-
-
-//===== IInteractable ==============
-public:
-	// Function to interact with the object
-	virtual void Interact(AActor* Interactor) override;
-
-	//Set Actor to interactable
-	virtual void Activate() override;
-
-	//Set Actor to not interactable
-	virtual void Deactivate() override;
+	/** Code for when something overlaps this component */
+	UFUNCTION()
+		void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
