@@ -20,11 +20,12 @@ void ASideRoomsGameState::InitGame_Implementation()
 
 void ASideRoomsGameState::InitMap()
 {
-
+	//Randomize Props, Decals, ETC
 }
 
 void ASideRoomsGameState::InitMonster()
 {
+	//for playerArray enemy spawn
 	AEnemyCharacterBase* enemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(EnemyCharacterClass, FVector(0.0f, 0.0f, 100.0f), FRotator());
 	checkf(enemy != nullptr, TEXT("ASideRoomsGameState::InitGame -> Failed to spawn enemy character"));
 	EnemyCharacterRefList.Add(enemy);
@@ -38,6 +39,8 @@ void ASideRoomsGameState::InitPlayer()
 		if (playerState == nullptr) continue; 
 		Cast<ACharacterBase>(playerState->GetPawn())->EnableMovement();
 	}
+
+	//Player Set Location
 }
 
 void ASideRoomsGameState::TryUpdateMissionCount(int32 AddValue)
