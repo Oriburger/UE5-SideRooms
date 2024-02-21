@@ -38,9 +38,6 @@ private:
 	UPROPERTY()
 		TArray<TWeakObjectPtr<AEnemyCharacterBase> > EnemyCharacterRefList;
 
-	//UPROPERTY()
-	//	TArray<class AMissionPropBase> MissionPropRefList;
-
 //====== Mission State / Update =================
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -48,16 +45,16 @@ public:
 
 protected:
 	UFUNCTION(BlueprintCallable)
-		void TryUpdateMissionCount(int32 AddValue);
+		void TryUpdateMissionCount();
 
 private:
 	int32 CurrentMissionCount = 0;
 
 	UFUNCTION(NetMulticast, Reliable)
-		void UpdateMissionCount(int32 AddValue);
+		void IncreaseMissionCount();
 	
 	UFUNCTION(Server, Reliable)
-		void ServerRPCUpdateMissionCount(int32 AddValue);
+		void ServerRPCIncreaseMissionCount();
 
 
 };
