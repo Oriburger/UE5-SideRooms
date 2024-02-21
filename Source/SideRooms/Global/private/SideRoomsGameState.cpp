@@ -2,7 +2,9 @@
 
 
 #include "../public/SideRoomsGameState.h"
+#include "../public/SideRoomsGameMode.h"
 #include "GameFramework/PlayerState.h"
+#include "Kismet/GameplayStatics.h"
 #include "../../Character/public/CharacterBase.h"
 #include "../../Character/public/EnemyCharacterBase.h"
 
@@ -43,27 +45,30 @@ void ASideRoomsGameState::InitPlayer()
 	//Player Set Location
 }
 
-void ASideRoomsGameState::TryUpdateMissionCount(int32 AddValue)
+void ASideRoomsGameState::TryUpdateMissionCount()
 {
 	if (HasAuthority())
 	{
-		UpdateMissionCount(AddValue);
+		IncreaseMissionCount();
 	}
 	else
 	{
-		ServerRPCUpdateMissionCount(AddValue);
+		ServerRPCIncreaseMissionCount();
 	}
 }
 
-void ASideRoomsGameState::UpdateMissionCount_Implementation(int AddValue)
+void ASideRoomsGameState::IncreaseMissionCount_Implementation()
 {
-	CurrentMissionCount += AddValue;
-
+	CurrentMissionCount += 1;
 }
 
-void ASideRoomsGameState::ServerRPCUpdateMissionCount_Implementation(int AddValue)
+void ASideRoomsGameState::ServerRPCIncreaseMissionCount_Implementation()
 {
-	if (AddValue != 1) return;
-	UpdateMissionCount(AddValue);
-	//GetWorld()->GetAuthGameMode()->CheckMissionComplete(CurrentMissionCount);
+	IncreaseMissionCount();
+	
+	ASideRoomsGameMode* gamemode = Cast<ASideRoomsGameMode>(GetWorld()->GetAuthGameMode());
+	if (gamemode)
+	{
+		gamemode->CheckMissionComplete(CurrentMissionCount);
+	}
 }

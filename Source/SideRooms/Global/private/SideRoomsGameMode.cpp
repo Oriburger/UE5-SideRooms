@@ -5,6 +5,7 @@
 #include "../../Character/public/SideRoomPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 #include "SocketSubsystem.h"
+#define MAX_PLAYER 4
 
 ASideRoomsGameMode::ASideRoomsGameMode() : Super()
 {
@@ -18,7 +19,7 @@ void ASideRoomsGameMode::PreLogin(const FString& Options, const FString& Address
 
 void ASideRoomsGameMode::PostLogin(APlayerController* NewPlayer)
 {
-	if (bHasBegun || PlayerControllerList.Num() >= 2)
+	if (bHasBegun || PlayerControllerList.Num() > MAX_PLAYER)
 	{
 		Cast<ASideRoomPlayerController>(NewPlayer)->DisconnectGame();
 	}
@@ -53,6 +54,14 @@ void ASideRoomsGameMode::UpdateDifficulty()
 	if (DifficultyInfoList.IsValidIndex(CurrentDifficulty))
 	{
 		//UpdateAIStat.Execute(DifficultyInfoList[NewDifficulty]);
+	}
+}
+
+void ASideRoomsGameMode::CheckMissionComplete(int32 CurrentMissionCount)
+{
+	if (CurrentMissionCount == PlayerControllerList.Num())
+	{
+		FinishGame();
 	}
 }
 

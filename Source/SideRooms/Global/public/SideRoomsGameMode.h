@@ -80,6 +80,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		int32 GetCurrentDifficulty() { return CurrentDifficulty; }
 
+	UFUNCTION()
+		void CheckMissionComplete(int32 CurrentMissionCount);
+
 //======= Utility ==============
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
