@@ -45,6 +45,7 @@ AMainCharacterBase::AMainCharacterBase()
 	FirstPersonMesh->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	FirstPersonMesh->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+	FirstPersonMesh->SetVisibility(false);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }

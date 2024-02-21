@@ -296,6 +296,7 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 	// switch bHasRifle so the animation blueprint can switch to another animation set
 	CharacterRef.Get()->SetHasRifle(true);
 	CharacterRef.Get()->WeaponRef = this;
+	CharacterRef.Get()->FirstPersonMesh->SetVisibility(true);
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(CharacterRef.Get()->GetController()))

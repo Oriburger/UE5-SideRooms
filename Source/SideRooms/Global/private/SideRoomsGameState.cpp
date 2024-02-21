@@ -47,25 +47,8 @@ void ASideRoomsGameState::InitPlayer()
 
 void ASideRoomsGameState::TryUpdateMissionCount()
 {
-	if (HasAuthority())
-	{
-		IncreaseMissionCount();
-	}
-	else
-	{
-		ServerRPCIncreaseMissionCount();
-	}
-}
-
-void ASideRoomsGameState::IncreaseMissionCount_Implementation()
-{
 	CurrentMissionCount += 1;
-}
 
-void ASideRoomsGameState::ServerRPCIncreaseMissionCount_Implementation()
-{
-	IncreaseMissionCount();
-	
 	ASideRoomsGameMode* gamemode = Cast<ASideRoomsGameMode>(GetWorld()->GetAuthGameMode());
 	if (gamemode)
 	{

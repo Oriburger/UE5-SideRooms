@@ -51,6 +51,9 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void FinishGame();
 
+	UFUNCTION(BlueprintCallable)
+		void StopElapsedTimer();
+
 private:
 	UPROPERTY()
 		TArray<TWeakObjectPtr<APlayerController> > PlayerControllerList;

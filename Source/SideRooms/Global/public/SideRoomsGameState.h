@@ -49,12 +49,4 @@ protected:
 
 private:
 	int32 CurrentMissionCount = 0;
-
-	UFUNCTION(NetMulticast, Reliable)
-		void IncreaseMissionCount();
-	
-	UFUNCTION(Server, Reliable)
-		void ServerRPCIncreaseMissionCount();
-
-
 };

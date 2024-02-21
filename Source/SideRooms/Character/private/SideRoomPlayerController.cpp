@@ -16,7 +16,7 @@ void ASideRoomPlayerController::OnPossess(APawn* InPawn)
 
 void ASideRoomPlayerController::DisconnectGame_Implementation()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu", true, "Failed");
+	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu", true);
 }
 
 void ASideRoomPlayerController::InitWidget_Implementation()

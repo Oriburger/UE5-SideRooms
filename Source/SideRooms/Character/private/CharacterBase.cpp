@@ -27,10 +27,12 @@ void ACharacterBase::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	if (!HasAuthority())
-		ServerRPCDisableMovement();
-	else if(GetLocalRole() == ENetRole::ROLE_SimulatedProxy)
+	if (HasAuthority())
 		DisableMovement();
+	else
+		ServerRPCDisableMovement();
+	
+		
 }
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

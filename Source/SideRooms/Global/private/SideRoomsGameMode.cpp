@@ -23,11 +23,16 @@ void ASideRoomsGameMode::PostLogin(APlayerController* NewPlayer)
 	{
 		Cast<ASideRoomPlayerController>(NewPlayer)->DisconnectGame();
 	}
-
 	Super::PostLogin(NewPlayer);
 
 	//Add new player to list 
 	PlayerControllerList.Add(NewPlayer);
+}
+
+void ASideRoomsGameMode::StopElapsedTimer()
+{
+	float totalElapsedTime = GetWorldTimerManager().GetTimerElapsed(ElapsedTimer);
+	GetWorldTimerManager().ClearTimer(ElapsedTimer);
 }
 
 void ASideRoomsGameMode::StartGame_Implementation()
@@ -44,8 +49,11 @@ void ASideRoomsGameMode::StartGame_Implementation()
 
 void ASideRoomsGameMode::FinishGame_Implementation()
 {
-	float totalElapsedTime = GetWorldTimerManager().GetTimerElapsed(ElapsedTimer);
-	GetWorldTimerManager().ClearTimer(ElapsedTimer);
+	for (auto& pc : PlayerControllerList)
+	{
+		if (!pc.IsValid()) continue;
+		Cast<ASideRoomPlayerController>(pc.Get())->DisconnectGame();
+	}
 }
 
 void ASideRoomsGameMode::UpdateDifficulty()
@@ -59,8 +67,10 @@ void ASideRoomsGameMode::UpdateDifficulty()
 
 void ASideRoomsGameMode::CheckMissionComplete(int32 CurrentMissionCount)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Check "));
 	if (CurrentMissionCount == PlayerControllerList.Num())
 	{
+		UE_LOG(LogTemp, Warning, TEXT(" Done!"));
 		FinishGame();
 	}
 }
