@@ -29,6 +29,7 @@ void ASideRoomsGameState::InitMap()
 	SpawnLocationList.Add(FVector(15985, -385, 80));
 
 	//Randomize Props, Decals, ETC
+
 }
 
 void ASideRoomsGameState::InitPlayer()

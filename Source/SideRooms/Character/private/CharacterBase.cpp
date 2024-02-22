@@ -32,8 +32,8 @@ void ACharacterBase::BeginPlay()
 	//else
 	//	ServerRPCDisableMovement();
 
-	if (!HasAuthority())
-		ServerRPCDisableMovement();
+	/*if (!HasAuthority())
+		ServerRPCDisableMovement();*/
 }
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
