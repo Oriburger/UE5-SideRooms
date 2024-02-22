@@ -109,7 +109,7 @@ void UTP_WeaponComponent::Fire_Implementation()
 	//Auto Fire / Reload Condition
 	if (CurrentClipSize == 0)
 	{
-		GetWorld()->GetTimerManager().SetTimer(AutoFireHandle, FTimerDelegate::CreateLambda([&]() { Reload(); }), 0.2f, false);
+		GetWorld()->GetTimerManager().SetTimer(AutoFireHandle, FTimerDelegate::CreateLambda([&]() { Reload(); }), 1.0f, false, 0.25f);
 	}
 	else
 	{
@@ -168,7 +168,7 @@ void UTP_WeaponComponent::Reload()
 			bCanFire = true;
 			bIsReloading = false;
 
-		}), ReloadSpeed, false);	// 반복하려면 false를 true로 변경
+		}), 1.0f, false, 2.5f);	// 반복하려면 false를 true로 변경
 }
 
 void UTP_WeaponComponent::StartAiming()
@@ -244,9 +244,12 @@ void UTP_WeaponComponent::PlayAnimMontage_Implementation(UAnimMontage* MeshAnima
 	if (CharacterAnimation != nullptr)
 	{
 		// Get the animation object for the arms mesh
-		UAnimInstance* characterAnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
-		if (characterAnimInstance != nullptr)
-			characterAnimInstance->Montage_Play(CharacterAnimation, InPlayRate);
+		if (CharacterRef.Get()->FirstPersonMesh)
+		{
+			UAnimInstance* characterAnimInstance = CharacterRef.Get()->FirstPersonMesh->GetAnimInstance();
+			if (characterAnimInstance != nullptr)
+				characterAnimInstance->Montage_Play(CharacterAnimation, InPlayRate);
+		}
 	}
 }
 
@@ -288,6 +291,7 @@ void UTP_WeaponComponent::AttachWeapon(AMainCharacterBase* TargetCharacter)
 {
 	CharacterRef = TargetCharacter;
 	if (!CharacterRef.IsValid()) return;
+	if (IsValid(CharacterRef.Get()->WeaponRef)) return; 
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);

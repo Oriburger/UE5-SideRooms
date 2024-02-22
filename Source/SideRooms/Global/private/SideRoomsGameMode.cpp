@@ -45,6 +45,13 @@ void ASideRoomsGameMode::StartGame_Implementation()
 	//Set timer for updating difficulty
 	GetWorldTimerManager().SetTimer(ElapsedTimer, this, &ASideRoomsGameMode::UpdateDifficulty, 
 									DifficultyUpdateInterval, true);
+
+	//Print init Fade effect
+	for (auto& pc : PlayerControllerList)
+	{
+		if (!pc.IsValid()) continue;
+		Cast<ASideRoomPlayerController>(pc.Get())->ActivateFadeEffect(true);
+	}
 }
 
 void ASideRoomsGameMode::FinishGame_Implementation()

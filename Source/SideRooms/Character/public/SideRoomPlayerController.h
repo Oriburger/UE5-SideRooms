@@ -22,6 +22,9 @@ public:
 	UFUNCTION(Client, Reliable)
 		void DisconnectGame();
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void ActivateFadeEffect(bool bFadeOut = false);
+
 //==== Widget ===================
 protected:
 	UFUNCTION(Client, Reliable)
