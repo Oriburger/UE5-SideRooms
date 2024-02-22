@@ -27,12 +27,13 @@ void ACharacterBase::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	if (HasAuthority())
-		DisableMovement();
-	else
-		ServerRPCDisableMovement();
-	
-		
+	//if (HasAuthority())
+	//	DisableMovement();
+	//else
+	//	ServerRPCDisableMovement();
+
+	/*if (!HasAuthority())
+		ServerRPCDisableMovement();*/
 }
 
 float ACharacterBase::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

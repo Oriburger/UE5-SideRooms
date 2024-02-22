@@ -38,6 +38,8 @@ private:
 	UPROPERTY()
 		TArray<TWeakObjectPtr<AEnemyCharacterBase> > EnemyCharacterRefList;
 
+		TArray<FVector> SpawnLocationList;
+
 //====== Mission State / Update =================
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)

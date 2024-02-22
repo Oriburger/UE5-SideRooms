@@ -13,36 +13,58 @@ void ASideRoomsGameState::InitGame_Implementation()
 	// Map & Mission Init
 	InitMap();
 
-	// Mob Init
-	InitMonster();
-
 	// Player Location Init
 	InitPlayer();
+
+	// Mob Init
+	InitMonster();
 }
 
 void ASideRoomsGameState::InitMap()
 {
-	//Randomize Props, Decals, ETC
-}
+	// Spawn Location Vector Init
+	SpawnLocationList.Add(FVector(325, 14840, 80));
+	SpawnLocationList.Add(FVector(325, -14195, 80));
+	SpawnLocationList.Add(FVector(-13075, -385, 80));
+	SpawnLocationList.Add(FVector(15985, -385, 80));
 
-void ASideRoomsGameState::InitMonster()
-{
-	//for playerArray enemy spawn
-	AEnemyCharacterBase* enemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(EnemyCharacterClass, FVector(0.0f, 0.0f, 100.0f), FRotator());
-	checkf(enemy != nullptr, TEXT("ASideRoomsGameState::InitGame -> Failed to spawn enemy character"));
-	EnemyCharacterRefList.Add(enemy);
-	enemy->EnableMovement();
+	//Randomize Props, Decals, ETC
+
 }
 
 void ASideRoomsGameState::InitPlayer()
 {
+	FRandomStream randomVal;
+	randomVal.GenerateNewSeed();
+
 	for (auto& playerState : PlayerArray)
 	{
-		if (playerState == nullptr) continue; 
+		if (playerState == nullptr) continue;
 		Cast<ACharacterBase>(playerState->GetPawn())->EnableMovement();
-	}
 
-	//Player Set Location
+		int randomInt = (int)randomVal.RandRange(0, SpawnLocationList.Num() - 1);
+
+		Cast<AActor>(playerState->GetPawn())->SetActorLocation(SpawnLocationList[randomInt], false);
+		SpawnLocationList.RemoveAt(randomInt);
+	}
+}
+
+void ASideRoomsGameState::InitMonster()
+{
+	float vectorX = 4000;
+	float vectorY = 4000;
+
+	FRandomStream randomVal;
+	randomVal.GenerateNewSeed();
+
+	for (auto& player : PlayerArray)
+	{
+		AEnemyCharacterBase* enemy = GetWorld()->SpawnActor<AEnemyCharacterBase>(EnemyCharacterClass, Cast<AActor>(player->GetPawn())->GetActorLocation() + FVector(4000, 4000, 0) * randomVal.VRand(), FRotator());
+		checkf(enemy != nullptr, TEXT("ASideRoomsGameState::InitGame -> Failed to spawn enemy character"));
+		EnemyCharacterRefList.Add(enemy);
+		enemy->EnableMovement();
+	}
+	
 }
 
 void ASideRoomsGameState::TryUpdateMissionCount()
