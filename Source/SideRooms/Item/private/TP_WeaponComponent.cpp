@@ -222,8 +222,8 @@ TArray<FHitResult> UTP_WeaponComponent::GetBulletHitResult()
 	
 	if (hitResult.bBlockingHit)
 	{
-		DrawDebugLine(GetWorld(), hitResult.Location, endLocation, FColor::Green, false, 2.0f, 0, 1.5f);
-		DrawDebugLine(GetWorld(), beginLocation, hitResult.Location, FColor::Red, false, 2.0f, 0, 2.0f);
+		//DrawDebugLine(GetWorld(), hitResult.Location, endLocation, FColor::Green, false, 2.0f, 0, 1.5f);
+		//DrawDebugLine(GetWorld(), beginLocation, hitResult.Location, FColor::Red, false, 2.0f, 0, 2.0f);
 	}
 
 	return { hitResult };
