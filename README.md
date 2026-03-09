@@ -2,6 +2,9 @@
 💡 24/02/23 오후 2:31 최초 작성
 </aside>
 
+- [자세한 소개 자료!!](https://www.miricanvas.com/ko/v/12wsqn1)
+
+  
 
 # 1. 실행 파일
 ---
